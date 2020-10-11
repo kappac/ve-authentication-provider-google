@@ -2,7 +2,7 @@ package config
 
 import (
 	hc "github.com/kappac/restx-helpers/pkg/config"
-	"github.com/micro/go-micro/v2/logger"
+	"github.com/micro/micro/v3/service/logger"
 )
 
 const (
