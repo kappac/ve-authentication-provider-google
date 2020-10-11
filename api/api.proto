@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+import "restx-helpers/api/protocol.proto";
+
+service VEAuthProviderGoogleService {
+  // In the property 'payload' of RestXRequest is supposed to be a VEValidateTokenRequest message.
+  rpc ValidateToken(RestXRequest) returns (RestXResponse);
+}
+
+message VEValidateTokenRequest {
+
+}
+
+message VEValidateTokenResponse {
+  
+}
