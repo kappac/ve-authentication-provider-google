@@ -23,8 +23,8 @@ message VEError {
 
 message VETokenInfo {
   string full_name = 1;
-	string given_name = 2;
-	string family_name = 3;
-	string picture = 4;
-	string email = 5;
+  string given_name = 2;
+  string family_name = 3;
+  string picture = 4;
+  string email = 5;
 }
