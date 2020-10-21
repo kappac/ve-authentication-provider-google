@@ -2,7 +2,6 @@ package config
 
 import (
 	hc "github.com/kappac/restx-helpers/pkg/config"
-	"github.com/micro/micro/v3/service/logger"
 )
 
 const (
@@ -30,8 +29,6 @@ func init() {
 	)
 
 	config.Scan(conf)
-
-	logger.Debugf("Config: %#v", conf)
 }
 
 // GetConfig returns current config for a service
