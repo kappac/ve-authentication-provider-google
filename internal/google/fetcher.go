@@ -2,17 +2,13 @@ package google
 
 import (
 	"encoding/json"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strconv"
 	"time"
-
-	"github.com/micro/micro/v3/service/logger"
 )
 
 const (
@@ -21,7 +17,7 @@ const (
 	fetcherCacheControlHeaderKey = "Cache-Control"
 )
 
-type fetcherCertsMap map[string][]byte
+type fetcherCertsMap map[string]string
 
 type fetcherProcessingResult struct {
 	maxAge time.Duration
@@ -53,26 +49,20 @@ func newFetcher() *fetcher {
 }
 
 func (f *fetcher) run() {
+	f.schedule()
+
 	for !f.isClosing {
 		select {
 		case errc := <-f.closeCh:
-			logger.Debug("Closing")
-
 			f.isClosing = true
 			f.closeChannels()
 			errc <- f.err
 		case <-f.nextUpdateCh:
-			logger.Debug("next update: request")
-
 			if f.fetchGetCh == nil {
-				logger.Debug("next update: fetch")
-
 				f.fetchGetCh = f.get()
 			}
 		case gr := <-f.fetchGetCh:
 			f.fetchGetCh = nil
-
-			logger.Debugf("fetch result: %v\n", gr)
 
 			if gr.err != nil {
 				f.err = gr.err
@@ -87,8 +77,6 @@ func (f *fetcher) run() {
 				f.processingCh = f.processResponse(gr.resp)
 			}
 		case pr := <-f.processingCh:
-			logger.Debugf("processing response: %v\n", pr)
-
 			f.processingCh = nil
 
 			var (
@@ -169,18 +157,14 @@ func (f *fetcher) processResponse(r http.Response) chan fetcherProcessingResult 
 				err: err,
 			}
 
-			logger.Fatal(err)
-
 			return
 		}
 
-		certs, err := getCerts(&r.Body)
+		certs, err := getCerts(r.Body)
 		if err != nil {
 			c <- fetcherProcessingResult{
 				err: err,
 			}
-
-			logger.Fatal(err)
 
 			return
 		}
@@ -220,35 +204,16 @@ func getMaxAge(h *http.Header) (time.Duration, error) {
 	if err != nil {
 		return 0, err
 	}
-
 	return time.Duration(nt) * time.Second, nil
 }
 
-func getCerts(r *io.ReadCloser) (fetcherCertsMap, error) {
+func getCerts(r io.ReadCloser) (fetcherCertsMap, error) {
+	defer r.Close()
+
 	certs := make(fetcherCertsMap)
-
-	b, err := ioutil.ReadAll(*r)
-	if err != nil {
+	if err := json.NewDecoder(r).Decode(&certs); err != nil {
 		return nil, err
 	}
 
-	p := new(map[string][]byte)
-	if err := json.Unmarshal(b, p); err != nil {
-		return nil, err
-	}
-
-	logger.Debugf("JSON from %s: %v", fetcherCertsURL, p)
-
-	var decodeErr error
-
-	for k, v := range *p {
-		b, _ := pem.Decode(v)
-		if b == nil {
-			errStr := fmt.Sprintf("No certificate for %s", k)
-			decodeErr = errors.New(errStr)
-			break
-		}
-	}
-
-	return certs, decodeErr
+	return certs, nil
 }

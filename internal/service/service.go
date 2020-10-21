@@ -1,32 +1,27 @@
 package service
 
 import (
-	"github.com/micro/micro/v3/service"
-
-	"github.com/kappac/ve-authentication-provider-google/internal/api"
-	"github.com/kappac/ve-authentication-provider-google/internal/config"
-	"github.com/kappac/ve-authentication-provider-google/internal/handler"
+	"github.com/kappac/ve-authentication-provider-google/internal/google"
 )
 
-var (
-	srv *service.Service
-)
+type veAuthenticationProviderGoogle struct {
+	tv google.TokenVerifier
+}
 
-// GetService - singleton, to get a service instance
-func GetService() *service.Service {
-	if srv != nil {
-		return srv
+func NewService() *veAuthenticationProviderGoogle {
+	tv := google.NewTokenVerifier()
+
+	go tv.Run()
+
+	return &veAuthenticationProviderGoogle{
+		tv: tv,
 	}
+}
 
-	cfg := config.GetConfig()
+func (s *veAuthenticationProviderGoogle) ValidateToken(t string) (*google.Token, error) {
+	return s.tv.Verify(t)
+}
 
-	srv = service.New(
-		service.Name(cfg.ServiceName),
-	)
-
-	srv.Init()
-
-	api.RegisterRestXLoggingServiceHandler(srv.Server(), new(handler.Handler))
-
-	return srv
+func (s *veAuthenticationProviderGoogle) Stop() error {
+	return s.tv.Stop()
 }
