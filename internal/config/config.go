@@ -18,7 +18,7 @@ func getDefaultConfig() *Config {
 
 // Config describes configuration file structure.
 type Config struct {
-	ServiceName string `json:"name"`
+	ServiceName string `json:"SERVICE_NAME"`
 }
 
 var conf *Config

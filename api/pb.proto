@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package pb;
+
+service VEAuthProviderGoogleService {
+  rpc ValidateToken(VEValidateTokenRequest) returns (VEValidateTokenResponse);
+}
+
+message VEValidateTokenRequest {
+  string token = 1;
+}
+
+message VEValidateTokenResponse {
+  VETokenInfo info = 1;
+  VEValidateTokenRequest request = 2;
+  VEError error = 3;
+}
+
+message VEError {
+  int32 code = 1;
+  string message = 2;
+}
+
+message VETokenInfo {
+  string full_name = 1;
+	string given_name = 2;
+	string family_name = 3;
+	string picture = 4;
+	string email = 5;
+}

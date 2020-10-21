@@ -2,12 +2,17 @@ package google
 
 import (
 	"github.com/dgrijalva/jwt-go"
-	"github.com/micro/micro/v3/service/logger"
 )
 
 // TokenVerifier is JWT token verification
 // entity for Google asymetric sign in.
-type TokenVerifier struct {
+type TokenVerifier interface {
+	Run()
+	Stop() error
+	Verify(t string) (*Token, error)
+}
+
+type tokenVerifier struct {
 	certs     *oauthCertificates
 	closeCh   chan chan error
 	isClosing bool
@@ -25,22 +30,23 @@ type Token struct {
 }
 
 // NewTokenVerifier instantiates TokenVerifier
-func NewTokenVerifier() *TokenVerifier {
+func NewTokenVerifier() TokenVerifier {
 	certs := newOauthCertificates()
 	closeCh := make(chan chan error)
 
-	return &TokenVerifier{
+	go certs.run()
+
+	return &tokenVerifier{
 		certs:   certs,
 		closeCh: closeCh,
 	}
 }
 
 // Run starts TokenVerifier execution loop
-func (tv *TokenVerifier) Run() {
+func (tv *tokenVerifier) Run() {
 	for !tv.isClosing {
 		select {
 		case errc := <-tv.closeCh:
-			logger.Debug("Closing")
 			tv.isClosing = true
 			tv.err = tv.certs.stop()
 			tv.closeChannels()
@@ -50,10 +56,12 @@ func (tv *TokenVerifier) Run() {
 }
 
 // Stop stops TokenVerifier execution loop
-func (tv *TokenVerifier) Stop() error {
+func (tv *tokenVerifier) Stop() error {
 	cc := make(chan error)
 
 	tv.closeCh <- cc
+
+	tv.certs.stop()
 
 	select {
 	case errc := <-cc:
@@ -62,10 +70,8 @@ func (tv *TokenVerifier) Stop() error {
 }
 
 // Verify validates token.
-func (tv *TokenVerifier) Verify(t string) (*Token, error) {
+func (tv *tokenVerifier) Verify(t string) (*Token, error) {
 	token, err := jwt.ParseWithClaims(t, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-		logger.Debugf("parsed token: %v\n", token)
-
 		kid := token.Header["kid"].(string)
 
 		cert, err := tv.certs.get(kid)
@@ -83,7 +89,7 @@ func (tv *TokenVerifier) Verify(t string) (*Token, error) {
 	return tv.mapToken(token), nil
 }
 
-func (tv *TokenVerifier) mapToken(t *jwt.Token) *Token {
+func (tv *tokenVerifier) mapToken(t *jwt.Token) *Token {
 	claims := t.Claims.(*tokenClaims)
 
 	return &Token{
@@ -95,6 +101,6 @@ func (tv *TokenVerifier) mapToken(t *jwt.Token) *Token {
 	}
 }
 
-func (tv *TokenVerifier) closeChannels() {
+func (tv *tokenVerifier) closeChannels() {
 	close(tv.closeCh)
 }
