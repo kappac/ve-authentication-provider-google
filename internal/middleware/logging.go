@@ -5,11 +5,11 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/kappac/ve-authentication-provider-google/internal/google"
-	"github.com/kappac/ve-authentication-provider-google/internal/server"
+	"github.com/kappac/ve-authentication-provider-google/internal/service"
 )
 
 type Logging struct {
-	server.VEAuthenticationProviderGoogle
+	service.VEAuthenticationProviderGoogle
 	log.Logger
 }
 
