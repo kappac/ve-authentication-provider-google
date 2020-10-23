@@ -2,7 +2,7 @@ package validatetokenresponse
 
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
-	"github.com/kappac/ve-authentication-provider-google/internal/types"
+	"github.com/kappac/ve-authentication-provider-google/internal/types/constants"
 	veerror "github.com/kappac/ve-authentication-provider-google/internal/types/error"
 	"github.com/kappac/ve-authentication-provider-google/internal/types/marshaller"
 	"github.com/kappac/ve-authentication-provider-google/internal/types/providerinfo"
@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	basicErrorCode       = types.ConstErrorCodeTypesBasic + 400
+	basicErrorCode       = constants.TypesBasicErrorCode + 400
 	errorCodeMarshalling = iota + basicErrorCode
 	errorCodeUnmarshalWrongType
 )
