@@ -18,3 +18,15 @@ type veValidateTokenResponse struct {
 	PRequest validatetokenrequest.VEValidateTokenRequest `json:"request"`
 	PError   error.VEError                               `json:"error,omitempty"`
 }
+
+func (tr *veValidateTokenResponse) Info() providerinfo.VEProviderInfo {
+	return tr.PInfo
+}
+
+func (tr *veValidateTokenResponse) Request() validatetokenrequest.VEValidateTokenRequest {
+	return tr.PRequest
+}
+
+func (tr *veValidateTokenResponse) Error() error.VEError {
+	return tr.PError
+}
