@@ -14,7 +14,6 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/kappac/ve-authentication-provider-google/internal/middleware"
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
-	"github.com/kappac/ve-authentication-provider-google/internal/server"
 	"github.com/kappac/ve-authentication-provider-google/internal/service"
 	"google.golang.org/grpc"
 )
@@ -54,7 +53,7 @@ func main() {
 	}
 
 	// Business domain
-	var svc server.VEAuthenticationProviderGoogle
+	var svc service.VEAuthenticationProviderGoogle
 	{
 		svc = service.NewService()
 		svc = middleware.Logging{svc, logger}

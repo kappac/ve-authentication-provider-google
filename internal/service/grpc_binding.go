@@ -5,11 +5,10 @@ import (
 
 	"github.com/kappac/ve-authentication-provider-google/internal/google"
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
-	"github.com/kappac/ve-authentication-provider-google/internal/server"
 )
 
 type GrpcBinding struct {
-	server.VEAuthenticationProviderGoogle
+	VEAuthenticationProviderGoogle
 }
 
 func (b GrpcBinding) ValidateToken(ctx context.Context, req *pb.VEValidateTokenRequest) (*pb.VEValidateTokenResponse, error) {
@@ -24,8 +23,8 @@ func (b GrpcBinding) ValidateToken(ctx context.Context, req *pb.VEValidateTokenR
 				Token: req.Token,
 			},
 			Error: &pb.VEError{
-				Code:    100,
-				Message: err.Error(),
+				Code:        100,
+				Description: err.Error(),
 			},
 		}
 
@@ -33,7 +32,7 @@ func (b GrpcBinding) ValidateToken(ctx context.Context, req *pb.VEValidateTokenR
 	}
 
 	res := &pb.VEValidateTokenResponse{
-		Info: &pb.VETokenInfo{
+		Info: &pb.VEProviderInfo{
 			FullName:   token.FullName,
 			GivenName:  token.GivenName,
 			FamilyName: token.FamilyName,
