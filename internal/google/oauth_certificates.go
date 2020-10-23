@@ -2,8 +2,6 @@ package google
 
 import (
 	"encoding/pem"
-	"errors"
-	"fmt"
 )
 
 type oauthCertificatesMap map[string]*pem.Block
@@ -74,8 +72,7 @@ func (oc *oauthCertificates) processCertsMap(cm fetcherCertsMap) error {
 		b, _ := pem.Decode([]byte(v))
 
 		if b == nil {
-			errStr := fmt.Sprintf("No certificate for %s", k)
-			decodeErr = errors.New(errStr)
+			decodeErr = errorNoCertificate
 			break
 		}
 
@@ -96,10 +93,7 @@ func (oc *oauthCertificates) get(k string) (*pem.Block, error) {
 	)
 
 	if b, ok = oc.certsMap[k]; !ok {
-		errStr := fmt.Sprintf("No certificate for %s", k)
-		err := errors.New(errStr)
-
-		return nil, err
+		return nil, errorNoCertificate
 	}
 
 	return b, nil

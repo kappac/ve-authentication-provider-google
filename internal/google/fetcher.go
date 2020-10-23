@@ -2,19 +2,11 @@ package google
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"regexp"
 	"strconv"
 	"time"
-)
-
-const (
-	fetcherGetTimeout            = 10 * time.Second
-	fetcherCertsURL              = "https://www.googleapis.com/oauth2/v1/certs"
-	fetcherCacheControlHeaderKey = "Cache-Control"
 )
 
 type fetcherCertsMap map[string]string
@@ -182,28 +174,26 @@ func getMaxAge(h *http.Header) (time.Duration, error) {
 	cacheControlHeader := h.Get(fetcherCacheControlHeaderKey)
 
 	if cacheControlHeader == "" {
-		errStr := fmt.Sprintf("\"%s\" is abscent in the response header", fetcherCacheControlHeaderKey)
-		return 0, errors.New(errStr)
+		return 0, errorCacheControlAbscent
 	}
 
 	re := regexp.MustCompile(`max-age=(\d*)`)
 
 	res := re.FindStringSubmatch(cacheControlHeader)
 	if res == nil {
-		errStr := fmt.Sprintf("\"max-age\" property is absent in \"%s\" key", fetcherCacheControlHeaderKey)
-		return 0, errors.New(errStr)
+		return 0, errorMaxAgePropertyAbscent
 	}
 
 	resLen := len(res)
 	if resLen <= 1 {
-		errStr := "The value for \"max-age\" property is absent"
-		return 0, errors.New(errStr)
+		return 0, errorMaxAgeValueAbscent
 	}
 
 	nt, err := strconv.Atoi(res[resLen-1])
 	if err != nil {
-		return 0, err
+		return 0, errorMaxAgeConvertion
 	}
+
 	return time.Duration(nt) * time.Second, nil
 }
 
@@ -212,7 +202,7 @@ func getCerts(r io.ReadCloser) (fetcherCertsMap, error) {
 
 	certs := make(fetcherCertsMap)
 	if err := json.NewDecoder(r).Decode(&certs); err != nil {
-		return nil, err
+		return nil, errorJSONDecode
 	}
 
 	return certs, nil
