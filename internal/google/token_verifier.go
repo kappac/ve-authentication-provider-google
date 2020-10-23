@@ -72,7 +72,13 @@ func (tv *tokenVerifier) Stop() error {
 // Verify validates token.
 func (tv *tokenVerifier) Verify(t string) (*Token, error) {
 	token, err := jwt.ParseWithClaims(t, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-		kid := token.Header["kid"].(string)
+		var kid
+		
+		if k, ok := token.Header["kid"]; ok {
+			kid = k.(string)
+		} else {
+			return nil, errorNoCertificateKeyID
+		}
 
 		cert, err := tv.certs.get(kid)
 		if err != nil {

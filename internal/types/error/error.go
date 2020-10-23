@@ -4,12 +4,11 @@ import (
 	"fmt"
 
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
-	"github.com/kappac/ve-authentication-provider-google/internal/types"
 	"github.com/kappac/ve-authentication-provider-google/internal/types/marshaller"
 )
 
 const (
-	basicErrorCode = types.ConstErrorCodeTypesBasic + 100
+	basicErrorCode = 100
 	_              = iota + basicErrorCode
 	errorCodeUnmarshalWrongType
 )
