@@ -2,19 +2,37 @@ package error
 
 import (
 	"fmt"
+
+	"github.com/kappac/ve-authentication-provider-google/internal/pb"
+	"github.com/kappac/ve-authentication-provider-google/internal/types"
+	"github.com/kappac/ve-authentication-provider-google/internal/types/marshaller"
+)
+
+const (
+	basicErrorCode = types.ConstErrorCodeTypesBasic + 100
+	_              = iota + basicErrorCode
+	errorCodeUnmarshalWrongType
+)
+
+var (
+	errorUnmarshalWrongType = New(
+		WithCode(errorCodeUnmarshalWrongType),
+		WithDescription("A package provided for Unmarshal is of a wrong type"),
+	)
 )
 
 // VEError is a basic error for VE project
 type VEError interface {
 	error
+	marshaller.Marshaller
 
-	Code() int32
-	Description() string
+	GetCode() int32
+	GetDescription() string
 }
 
 type veError struct {
-	PCode        int32  `json:"code"`
-	PDescription string `json:"description"`
+	Code        int32  `json:"code"`
+	Description string `json:"description"`
 }
 
 // New creates new instance of VEError.
@@ -29,13 +47,34 @@ func New(ous ...OptionUpdater) VEError {
 }
 
 func (e *veError) Error() string {
-	return fmt.Sprintf("[%d]: %s", e.PCode, e.PDescription)
+	return fmt.Sprintf("[%d]: %s", e.Code, e.Description)
 }
 
-func (e *veError) Code() int32 {
-	return e.PCode
+func (e *veError) GetCode() int32 {
+	return e.Code
 }
 
-func (e *veError) Description() string {
-	return e.PDescription
+func (e *veError) GetDescription() string {
+	return e.Description
+}
+
+func (e *veError) Marshal() (interface{}, error) {
+	p := &pb.VEError{
+		Code:        e.GetCode(),
+		Description: e.GetDescription(),
+	}
+
+	return p, nil
+}
+
+func (e *veError) Unmarshal(p interface{}) error {
+	pbError, ok := p.(*pb.VEError)
+	if !ok {
+		return errorUnmarshalWrongType
+	}
+
+	e.Code = pbError.GetCode()
+	e.Description = pbError.GetDescription()
+
+	return nil
 }

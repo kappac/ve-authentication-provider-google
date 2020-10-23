@@ -1,21 +1,43 @@
 package providerinfo
 
+import (
+	"github.com/kappac/ve-authentication-provider-google/internal/pb"
+	"github.com/kappac/ve-authentication-provider-google/internal/types"
+	veerror "github.com/kappac/ve-authentication-provider-google/internal/types/error"
+	"github.com/kappac/ve-authentication-provider-google/internal/types/marshaller"
+)
+
+const (
+	basicErrorCode = types.ConstErrorCodeTypesBasic + 200
+	_              = iota + basicErrorCode
+	errorCodeUnmarshalWrongType
+)
+
+var (
+	errorUnmarshalWrongType = veerror.New(
+		veerror.WithCode(errorCodeUnmarshalWrongType),
+		veerror.WithDescription("A package provided for Unmarshal is of a wrong type"),
+	)
+)
+
 // VEProviderInfo contains an information about user,
 // necessary to provide a service.
 type VEProviderInfo interface {
-	FullName() string
-	GivenName() string
-	FamilyName() string
-	Picture() string
-	Email() string
+	marshaller.Marshaller
+
+	GetFullName() string
+	GetGivenName() string
+	GetFamilyName() string
+	GetPicture() string
+	GetEmail() string
 }
 
 type veProviderInfo struct {
-	PFullName   string `json:"full_name,omitempty"`
-	PGivenName  string `json:"given_name,omitempty"`
-	PFamilyName string `json:"family_name,omitempty"`
-	PPicture    string `json:"picture,omitempty"`
-	PEmail      string `json:"email,omitempty"`
+	FullName   string `json:"full_name,omitempty"`
+	GivenName  string `json:"given_name,omitempty"`
+	FamilyName string `json:"family_name,omitempty"`
+	Picture    string `json:"picture,omitempty"`
+	Email      string `json:"email,omitempty"`
 }
 
 // New creates new instance of VEProviderInfo.
@@ -29,22 +51,49 @@ func New(ous ...OptionUpdater) VEProviderInfo {
 	return pct
 }
 
-func (pi *veProviderInfo) FullName() string {
-	return pi.PFullName
+func (pi *veProviderInfo) GetFullName() string {
+	return pi.FullName
 }
 
-func (pi *veProviderInfo) GivenName() string {
-	return pi.PGivenName
+func (pi *veProviderInfo) GetGivenName() string {
+	return pi.GivenName
 }
 
-func (pi *veProviderInfo) FamilyName() string {
-	return pi.PFamilyName
+func (pi *veProviderInfo) GetFamilyName() string {
+	return pi.FamilyName
 }
 
-func (pi *veProviderInfo) Picture() string {
-	return pi.PPicture
+func (pi *veProviderInfo) GetPicture() string {
+	return pi.Picture
 }
 
-func (pi *veProviderInfo) Email() string {
-	return pi.PEmail
+func (pi *veProviderInfo) GetEmail() string {
+	return pi.Email
+}
+
+func (pi *veProviderInfo) Marshal() (interface{}, error) {
+	p := &pb.VEProviderInfo{
+		FullName:   pi.GetFullName(),
+		GivenName:  pi.GetGivenName(),
+		FamilyName: pi.GetFamilyName(),
+		Picture:    pi.GetPicture(),
+		Email:      pi.GetEmail(),
+	}
+
+	return p, nil
+}
+
+func (pi *veProviderInfo) Unmarshal(p interface{}) error {
+	pbInfo, ok := p.(*pb.VEProviderInfo)
+	if !ok {
+		return errorUnmarshalWrongType
+	}
+
+	pi.FullName = pbInfo.GetFullName()
+	pi.GivenName = pbInfo.GetGivenName()
+	pi.FamilyName = pbInfo.GetFamilyName()
+	pi.Picture = pbInfo.GetPicture()
+	pi.Email = pbInfo.GetEmail()
+
+	return nil
 }
