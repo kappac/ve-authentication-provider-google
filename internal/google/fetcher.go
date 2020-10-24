@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/kappac/ve-authentication-provider-google/internal/logger"
 )
 
 type fetcherCertsMap map[string]string
@@ -23,6 +25,7 @@ type fetcherGetResult struct {
 }
 
 type fetcher struct {
+	logger       logger.Logger
 	closeCh      chan chan error
 	fetchGetCh   <-chan fetcherGetResult
 	processingCh chan fetcherProcessingResult
@@ -35,6 +38,9 @@ type fetcher struct {
 
 func newFetcher() *fetcher {
 	return &fetcher{
+		logger: logger.New(
+			logger.WithEntity("Fetcher"),
+		),
 		closeCh:   make(chan chan error),
 		updatesCh: make(chan fetcherCertsMap),
 	}
@@ -43,18 +49,27 @@ func newFetcher() *fetcher {
 func (f *fetcher) run() {
 	f.schedule()
 
+	f.logger.Infom("starting")
+
 	for !f.isClosing {
 		select {
 		case errc := <-f.closeCh:
 			f.isClosing = true
 			f.closeChannels()
+
+			f.logger.Infom("closing", "err", f.err)
+
 			errc <- f.err
 		case <-f.nextUpdateCh:
 			if f.fetchGetCh == nil {
+				f.logger.Debugm("new request")
+
 				f.fetchGetCh = f.get()
 			}
 		case gr := <-f.fetchGetCh:
 			f.fetchGetCh = nil
+
+			f.logger.Debugm("request finished", "err", gr.err)
 
 			if gr.err != nil {
 				f.err = gr.err
@@ -74,6 +89,8 @@ func (f *fetcher) run() {
 			var (
 				nt time.Duration
 			)
+
+			f.logger.Debugm("response processed", "err", pr.err)
 
 			if pr.err != nil {
 				f.err = pr.err
@@ -174,19 +191,19 @@ func getMaxAge(h *http.Header) (time.Duration, error) {
 	cacheControlHeader := h.Get(fetcherCacheControlHeaderKey)
 
 	if cacheControlHeader == "" {
-		return 0, errorCacheControlAbscent
+		return 0, errorCacheControlAbsent
 	}
 
 	re := regexp.MustCompile(`max-age=(\d*)`)
 
 	res := re.FindStringSubmatch(cacheControlHeader)
 	if res == nil {
-		return 0, errorMaxAgePropertyAbscent
+		return 0, errorMaxAgePropertyAbsent
 	}
 
 	resLen := len(res)
 	if resLen <= 1 {
-		return 0, errorMaxAgeValueAbscent
+		return 0, errorMaxAgeValueAbsent
 	}
 
 	nt, err := strconv.Atoi(res[resLen-1])

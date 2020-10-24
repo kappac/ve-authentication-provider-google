@@ -2,6 +2,7 @@ package google
 
 import (
 	"github.com/dgrijalva/jwt-go"
+	"github.com/kappac/ve-authentication-provider-google/internal/logger"
 )
 
 // TokenVerifier is JWT token verification
@@ -13,6 +14,7 @@ type TokenVerifier interface {
 }
 
 type tokenVerifier struct {
+	logger    logger.Logger
 	certs     *oauthCertificates
 	closeCh   chan chan error
 	isClosing bool
@@ -33,10 +35,14 @@ type Token struct {
 func NewTokenVerifier() TokenVerifier {
 	certs := newOauthCertificates()
 	closeCh := make(chan chan error)
+	l := logger.New(
+		logger.WithEntity("TokenVerifier"),
+	)
 
 	go certs.run()
 
 	return &tokenVerifier{
+		logger:  l,
 		certs:   certs,
 		closeCh: closeCh,
 	}
@@ -44,12 +50,17 @@ func NewTokenVerifier() TokenVerifier {
 
 // Run starts TokenVerifier execution loop
 func (tv *tokenVerifier) Run() {
+	tv.logger.Infom("starting")
+
 	for !tv.isClosing {
 		select {
 		case errc := <-tv.closeCh:
 			tv.isClosing = true
 			tv.err = tv.certs.stop()
 			tv.closeChannels()
+
+			tv.logger.Infom("closing", "err", tv.err)
+
 			errc <- tv.err
 		}
 	}
@@ -72,8 +83,10 @@ func (tv *tokenVerifier) Stop() error {
 // Verify validates token.
 func (tv *tokenVerifier) Verify(t string) (*Token, error) {
 	token, err := jwt.ParseWithClaims(t, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-		var kid
-		
+		var (
+			kid string
+		)
+
 		if k, ok := token.Header["kid"]; ok {
 			kid = k.(string)
 		} else {
@@ -89,6 +102,7 @@ func (tv *tokenVerifier) Verify(t string) (*Token, error) {
 	})
 
 	if err != nil {
+		tv.logger.Infom("Verify", "err", err)
 		return nil, err
 	}
 

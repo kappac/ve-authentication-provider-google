@@ -17,19 +17,19 @@ const (
 )
 
 var (
-	errorCacheControlAbscent = veerror.New(
-		veerror.WithCode(errorCodeCacheControlHeaderAbscent),
+	errorCacheControlAbsent = veerror.New(
+		veerror.WithCode(errorCodeCacheControlHeaderAbsent),
 		veerror.WithDescription(
 			fmt.Sprintf("\"%s\" is absent in the response header", fetcherCacheControlHeaderKey),
 		),
 	)
-	errorMaxAgePropertyAbscent = veerror.New(
+	errorMaxAgePropertyAbsent = veerror.New(
 		veerror.WithCode(errorCodeMaxAgePropertyAbsent),
 		veerror.WithDescription(
 			fmt.Sprintf("\"%s\" is absent in the response header", fetcherMaxAgeProperty),
 		),
 	)
-	errorMaxAgeValueAbscent = veerror.New(
+	errorMaxAgeValueAbsent = veerror.New(
 		veerror.WithCode(errorCodeMaxAgeValueAbsent),
 		veerror.WithDescription(
 			fmt.Sprintf("Value for \"%s\" is absent", fetcherMaxAgeProperty),
