@@ -2,11 +2,14 @@ package google
 
 import (
 	"encoding/pem"
+
+	"github.com/kappac/ve-authentication-provider-google/internal/logger"
 )
 
 type oauthCertificatesMap map[string]*pem.Block
 
 type oauthCertificates struct {
+	logger        logger.Logger
 	f             *fetcher
 	certsMap      oauthCertificatesMap
 	certsUpdateCh chan fetcherCertsMap
@@ -18,12 +21,17 @@ type oauthCertificates struct {
 func newOauthCertificates() *oauthCertificates {
 	f := newFetcher()
 
+	l := logger.New(
+		logger.WithEntity("OAuthCertificates"),
+	)
+
 	certsUpdateCh := f.subscribe()
 	closeCh := make(chan chan error)
 
 	go f.run()
 
 	return &oauthCertificates{
+		logger:        l,
 		f:             f,
 		certsUpdateCh: certsUpdateCh,
 		closeCh:       closeCh,
@@ -31,6 +39,8 @@ func newOauthCertificates() *oauthCertificates {
 }
 
 func (oc *oauthCertificates) run() {
+	oc.logger.Infom("starting")
+
 	for !oc.isClosing {
 		select {
 		case errc := <-oc.closeCh:
@@ -38,13 +48,14 @@ func (oc *oauthCertificates) run() {
 
 			oc.err = oc.f.stop()
 
+			oc.logger.Infom("closing", "err", oc.err)
+
 			oc.closeChannels()
 			errc <- oc.err
 		case certsMap := <-oc.certsUpdateCh:
 			oc.err = oc.processCertsMap(certsMap)
 
-			if oc.err != nil {
-			}
+			oc.logger.Debugm("certificates processed", "err", oc.err)
 		}
 	}
 }
