@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"github.com/kappac/ve-authentication-provider-google/internal/veconfig"
 )
 
 const (
@@ -18,10 +19,17 @@ var (
 )
 
 func init() {
+	globalConfig := veconfig.GetConfig()
+	levelOption := level.AllowInfo()
+
+	if globalConfig.Debug {
+		levelOption = level.AllowDebug()
+	}
+
 	defaultLogger = log.NewLogfmtLogger(
 		log.NewSyncWriter(os.Stdout),
 	)
-	defaultLogger = level.NewFilter(defaultLogger, level.AllowInfo(), level.AllowWarn(), level.AllowError(), level.AllowDebug())
+	defaultLogger = level.NewFilter(defaultLogger, levelOption)
 	defaultLogger = log.With(defaultLogger, "ts", log.TimestampFormat(time.Now, "15:04:05.9999"))
 }
 
