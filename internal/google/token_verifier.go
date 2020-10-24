@@ -50,7 +50,7 @@ func NewTokenVerifier() TokenVerifier {
 
 // Run starts TokenVerifier execution loop
 func (tv *tokenVerifier) Run() {
-	tv.logger.Infom("starting")
+	tv.logger.Debugm("starting")
 
 	for !tv.isClosing {
 		select {
@@ -59,7 +59,7 @@ func (tv *tokenVerifier) Run() {
 			tv.err = tv.certs.stop()
 			tv.closeChannels()
 
-			tv.logger.Infom("closing", "err", tv.err)
+			tv.logger.Debugm("closing", "err", tv.err)
 
 			errc <- tv.err
 		}

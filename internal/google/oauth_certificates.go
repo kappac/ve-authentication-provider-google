@@ -39,7 +39,7 @@ func newOauthCertificates() *oauthCertificates {
 }
 
 func (oc *oauthCertificates) run() {
-	oc.logger.Infom("starting")
+	oc.logger.Debugm("starting")
 
 	for !oc.isClosing {
 		select {
@@ -48,14 +48,14 @@ func (oc *oauthCertificates) run() {
 
 			oc.err = oc.f.stop()
 
-			oc.logger.Infom("closing", "err", oc.err)
+			oc.logger.Debugm("closing", "err", oc.err)
 
 			oc.closeChannels()
 			errc <- oc.err
 		case certsMap := <-oc.certsUpdateCh:
 			oc.err = oc.processCertsMap(certsMap)
 
-			oc.logger.Debugm("certificates processed", "err", oc.err)
+			oc.logger.Infom("certificates processed", "err", oc.err)
 		}
 	}
 }
