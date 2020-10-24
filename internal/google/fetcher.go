@@ -49,7 +49,7 @@ func newFetcher() *fetcher {
 func (f *fetcher) run() {
 	f.schedule()
 
-	f.logger.Infom("starting")
+	f.logger.Debugm("starting")
 
 	for !f.isClosing {
 		select {
@@ -57,7 +57,7 @@ func (f *fetcher) run() {
 			f.isClosing = true
 			f.closeChannels()
 
-			f.logger.Infom("closing", "err", f.err)
+			f.logger.Debugm("closing", "err", f.err)
 
 			errc <- f.err
 		case <-f.nextUpdateCh:
@@ -69,7 +69,7 @@ func (f *fetcher) run() {
 		case gr := <-f.fetchGetCh:
 			f.fetchGetCh = nil
 
-			f.logger.Debugm("request finished", "err", gr.err)
+			f.logger.Infom("request finished", "err", gr.err)
 
 			if gr.err != nil {
 				f.err = gr.err
@@ -90,7 +90,7 @@ func (f *fetcher) run() {
 				nt time.Duration
 			)
 
-			f.logger.Debugm("response processed", "err", pr.err)
+			f.logger.Infom("response processed", "err", pr.err)
 
 			if pr.err != nil {
 				f.err = pr.err

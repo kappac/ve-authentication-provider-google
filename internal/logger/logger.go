@@ -6,6 +6,12 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"github.com/kappac/ve-authentication-provider-google/internal/veconfig"
+)
+
+const (
+	entityKey  = "entity"
+	messageKey = "msg"
 )
 
 var (
@@ -13,10 +19,17 @@ var (
 )
 
 func init() {
+	globalConfig := veconfig.GetConfig()
+	levelOption := level.AllowInfo()
+
+	if globalConfig.Debug {
+		levelOption = level.AllowDebug()
+	}
+
 	defaultLogger = log.NewLogfmtLogger(
 		log.NewSyncWriter(os.Stdout),
 	)
-	defaultLogger = level.NewFilter(defaultLogger, level.AllowInfo(), level.AllowWarn(), level.AllowError(), level.AllowDebug())
+	defaultLogger = level.NewFilter(defaultLogger, levelOption)
 	defaultLogger = log.With(defaultLogger, "ts", log.TimestampFormat(time.Now, "15:04:05.9999"))
 }
 
@@ -50,7 +63,7 @@ func New(ous ...OptionUpdater) Logger {
 		ou(l)
 	}
 
-	l.logger = log.With(l.parentLogger, "entity", l.entityName)
+	l.logger = log.With(l.parentLogger, entityKey, l.entityName)
 
 	return l
 }
@@ -60,9 +73,9 @@ func (l *logger) Info(args ...interface{}) error {
 }
 
 func (l *logger) Infom(message string, args ...interface{}) error {
-	mp := l.buildMessagePair(message)
-	nArgs := append(mp, args...)
-	return l.Info(nArgs...)
+	return l.Info(
+		l.buildArgs(message, args)...,
+	)
 }
 
 func (l *logger) Warning(args ...interface{}) error {
@@ -70,9 +83,9 @@ func (l *logger) Warning(args ...interface{}) error {
 }
 
 func (l *logger) Warningm(message string, args ...interface{}) error {
-	mp := l.buildMessagePair(message)
-	nArgs := append(mp, args...)
-	return l.Warning(nArgs...)
+	return l.Warning(
+		l.buildArgs(message, args)...,
+	)
 }
 
 func (l *logger) Error(args ...interface{}) error {
@@ -80,9 +93,9 @@ func (l *logger) Error(args ...interface{}) error {
 }
 
 func (l *logger) Errorm(message string, args ...interface{}) error {
-	mp := l.buildMessagePair(message)
-	nArgs := append(mp, args...)
-	return l.Error(nArgs...)
+	return l.Error(
+		l.buildArgs(message, args)...,
+	)
 }
 
 func (l *logger) Debug(args ...interface{}) error {
@@ -90,15 +103,16 @@ func (l *logger) Debug(args ...interface{}) error {
 }
 
 func (l *logger) Debugm(message string, args ...interface{}) error {
-	mp := l.buildMessagePair(message)
-	nArgs := append(mp, args...)
-	return l.Debug(nArgs...)
+	return l.Debug(
+		l.buildArgs(message, args)...,
+	)
 }
 
 func (l *logger) getLogger() log.Logger {
 	return l.logger
 }
 
-func (l *logger) buildMessagePair(message string) []interface{} {
-	return []interface{}{"msg", message}
+func (l *logger) buildArgs(message string, args []interface{}) []interface{} {
+	mp := []interface{}{messageKey, message}
+	return append(mp, args...)
 }
