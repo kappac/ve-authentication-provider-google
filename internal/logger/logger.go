@@ -19,10 +19,9 @@ var (
 )
 
 func init() {
-	globalConfig := veconfig.GetConfig()
 	levelOption := level.AllowInfo()
 
-	if globalConfig.Debug {
+	if veconfig.Global.Debug {
 		levelOption = level.AllowDebug()
 	}
 
