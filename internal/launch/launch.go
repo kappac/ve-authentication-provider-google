@@ -16,7 +16,7 @@ var (
 
 // Function defines an interface of code to be run in
 // a routine.
-type Function func(errCh chan<- error, exitCh <-chan bool)
+type Function func(errCh chan<- error, exitCh chan bool)
 
 // Launch starts functions provided as the parameters and manages
 // sygnals to interrupt its.
@@ -58,6 +58,10 @@ func Launch(fns ...Function) chan error {
 				log.Debugm("Stopping")
 				for _, exitCh := range exitChs {
 					exitCh <- true
+
+					select {
+					case <-exitCh:
+					}
 				}
 
 				isClosing = true

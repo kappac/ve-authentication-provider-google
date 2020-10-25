@@ -1,9 +1,9 @@
-package validatetokenresponse
+package response
 
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/types/error"
 	"github.com/kappac/ve-authentication-provider-google/internal/types/providerinfo"
-	"github.com/kappac/ve-authentication-provider-google/internal/types/validatetokenrequest"
+	"github.com/kappac/ve-authentication-provider-google/internal/types/request"
 )
 
 // OptionUpdater updates veValidateTokenResponse properties.
@@ -17,7 +17,7 @@ func WithInfo(i providerinfo.VEProviderInfo) OptionUpdater {
 }
 
 // WithRequest updates Request field of veValidateTokenResponse
-func WithRequest(r validatetokenrequest.VEValidateTokenRequest) OptionUpdater {
+func WithRequest(r request.VEValidateTokenRequest) OptionUpdater {
 	return func(tr *veValidateTokenResponse) {
 		tr.Request = r
 	}

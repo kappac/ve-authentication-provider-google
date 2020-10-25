@@ -1,4 +1,4 @@
-package validatetokenresponse
+package response
 
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
@@ -6,7 +6,7 @@ import (
 	veerror "github.com/kappac/ve-authentication-provider-google/internal/types/error"
 	"github.com/kappac/ve-authentication-provider-google/internal/types/marshaller"
 	"github.com/kappac/ve-authentication-provider-google/internal/types/providerinfo"
-	"github.com/kappac/ve-authentication-provider-google/internal/types/validatetokenrequest"
+	"github.com/kappac/ve-authentication-provider-google/internal/types/request"
 )
 
 const (
@@ -31,21 +31,32 @@ type VEValidateTokenResponse interface {
 	marshaller.Marshaller
 
 	GetInfo() providerinfo.VEProviderInfo
-	GetRequest() validatetokenrequest.VEValidateTokenRequest
+	GetRequest() request.VEValidateTokenRequest
 	GetError() veerror.VEError
 }
 
 type veValidateTokenResponse struct {
-	Info    providerinfo.VEProviderInfo                 `json:"info,omitempty"`
-	Request validatetokenrequest.VEValidateTokenRequest `json:"request"`
-	Error   veerror.VEError                             `json:"error,omitempty"`
+	Info    providerinfo.VEProviderInfo    `json:"info,omitempty"`
+	Request request.VEValidateTokenRequest `json:"request"`
+	Error   veerror.VEError                `json:"error,omitempty"`
+}
+
+// New constructs VEValidateTokenResponse instance
+func New(ous ...OptionUpdater) VEValidateTokenResponse {
+	r := &veValidateTokenResponse{}
+
+	for _, ou := range ous {
+		ou(r)
+	}
+
+	return r
 }
 
 func (tr *veValidateTokenResponse) GetInfo() providerinfo.VEProviderInfo {
 	return tr.Info
 }
 
-func (tr *veValidateTokenResponse) GetRequest() validatetokenrequest.VEValidateTokenRequest {
+func (tr *veValidateTokenResponse) GetRequest() request.VEValidateTokenRequest {
 	return tr.Request
 }
 
@@ -82,4 +93,37 @@ func (tr *veValidateTokenResponse) Marshal() (interface{}, error) {
 	}
 
 	return p, nil
+}
+
+func (tr *veValidateTokenResponse) Unmarshal(p interface{}) error {
+	var (
+		veinfo = providerinfo.New()
+		vereq  = request.New()
+		veerr  = veerror.New()
+	)
+
+	pbResponse, ok := p.(*pb.VEValidateTokenResponse)
+	if !ok {
+		return errorUnmarshalWrongType
+	}
+
+	if err := veinfo.Unmarshal(pbResponse.GetInfo()); err == nil {
+		tr.Info = veinfo
+	} else {
+		return err
+	}
+
+	if err := vereq.Unmarshal(pbResponse.GetRequest()); err == nil {
+		tr.Request = vereq
+	} else {
+		return err
+	}
+
+	if err := veerr.Unmarshal(pbResponse.GetError()); err == nil {
+		tr.Error = veerr
+	} else {
+		return err
+	}
+
+	return nil
 }
