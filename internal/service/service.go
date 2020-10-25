@@ -17,8 +17,6 @@ type veAuthenticationProviderGoogle struct {
 func New() VEAuthenticationProviderGoogle {
 	tv := google.NewTokenVerifier()
 
-	go tv.Run()
-
 	return &veAuthenticationProviderGoogle{
 		tv: tv,
 	}
@@ -26,6 +24,19 @@ func New() VEAuthenticationProviderGoogle {
 
 func (s *veAuthenticationProviderGoogle) ValidateToken(t string) (*google.Token, error) {
 	return s.tv.Verify(t)
+}
+
+func (s *veAuthenticationProviderGoogle) Run() error {
+	var ch = make(chan bool)
+
+	go (func() {
+		s.tv.Run()
+		ch <- true
+	})()
+
+	<-ch
+
+	return nil
 }
 
 func (s *veAuthenticationProviderGoogle) Stop() error {

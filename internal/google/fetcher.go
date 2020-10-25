@@ -47,9 +47,9 @@ func newFetcher() *fetcher {
 }
 
 func (f *fetcher) run() {
-	f.schedule()
-
 	f.logger.Debugm("starting")
+
+	f.schedule()
 
 	for !f.isClosing {
 		select {
@@ -109,6 +109,8 @@ func (f *fetcher) run() {
 }
 
 func (f *fetcher) stop() error {
+	f.logger.Debugm("stopping")
+
 	cc := make(chan error)
 
 	f.closeCh <- cc

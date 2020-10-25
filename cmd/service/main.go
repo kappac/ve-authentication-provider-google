@@ -1,15 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"net"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/kappac/ve-authentication-provider-google/internal/config"
+	"github.com/kappac/ve-authentication-provider-google/internal/launch"
 	"github.com/kappac/ve-authentication-provider-google/internal/logger"
 	"github.com/kappac/ve-authentication-provider-google/internal/middleware"
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
@@ -33,28 +30,60 @@ func main() {
 	)
 
 	rand.Seed(time.Now().UnixNano())
-	errc := make(chan error)
 
-	go func() {
-		errc <- interrupt()
-	}()
+	launchErr := <-launch.Launch(
+		svcLauncher(svcNoLog.(launch.RunStopper)),
+		grpcBindingLauncher(service.GrpcBinding{svc}),
+	)
 
-	go func() {
-		ln, err := net.Listen("tcp", config.Config.Address)
-		if err != nil {
-			errc <- err
-			return
-		}
-		s := grpc.NewServer()
-		pb.RegisterVEAuthProviderGoogleServiceServer(s, service.GrpcBinding{svc})
-		errc <- s.Serve(ln)
-	}()
-
-	_ = log.Info("fatal", <-errc)
+	_ = log.Infom("Terminating", "err", launchErr)
 }
 
-func interrupt() error {
-	c := make(chan os.Signal)
-	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
-	return fmt.Errorf("%s", <-c)
+func svcLauncher(svc launch.RunStopper) launch.Function {
+	return func(errCh chan<- error, exitCh <-chan bool) {
+		var (
+			isClosing bool
+		)
+
+		go (func() {
+			errCh <- svc.Run()
+		})()
+
+		for !isClosing {
+			select {
+			case <-exitCh:
+				isClosing = true
+				svc.Stop()
+			}
+		}
+	}
+}
+
+func grpcBindingLauncher(srv pb.VEAuthProviderGoogleServiceServer) launch.Function {
+	return func(errCh chan<- error, exitCh <-chan bool) {
+		var (
+			isClosing bool
+		)
+
+		ln, err := net.Listen("tcp", config.Config.Address)
+		if err != nil {
+			errCh <- err
+			return
+		}
+
+		s := grpc.NewServer()
+		pb.RegisterVEAuthProviderGoogleServiceServer(s, srv)
+
+		go (func() {
+			errCh <- s.Serve(ln)
+		})()
+
+		for !isClosing {
+			select {
+			case <-exitCh:
+				isClosing = true
+				s.Stop()
+			}
+		}
+	}
 }

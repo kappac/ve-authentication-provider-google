@@ -57,17 +57,19 @@ func (tv *tokenVerifier) Run() {
 		case errc := <-tv.closeCh:
 			tv.isClosing = true
 			tv.err = tv.certs.stop()
-			tv.closeChannels()
 
 			tv.logger.Debugm("closing", "err", tv.err)
 
 			errc <- tv.err
+			tv.closeChannels()
 		}
 	}
 }
 
 // Stop stops TokenVerifier execution loop
 func (tv *tokenVerifier) Stop() error {
+	tv.logger.Debugm("stopping")
+
 	cc := make(chan error)
 
 	tv.closeCh <- cc
