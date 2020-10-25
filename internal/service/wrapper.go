@@ -5,7 +5,7 @@ import (
 
 	"github.com/kappac/ve-authentication-provider-google/internal/logger"
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
-	"github.com/kappac/ve-authentication-provider-google/internal/runstopper"
+	"github.com/kappac/ve-authentication-provider-google/internal/types/runstopper"
 	"google.golang.org/grpc"
 )
 

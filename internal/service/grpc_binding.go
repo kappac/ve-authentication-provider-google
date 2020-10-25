@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
-	"github.com/kappac/ve-authentication-provider-google/internal/runstopper"
 	"github.com/kappac/ve-authentication-provider-google/internal/types/request"
+	"github.com/kappac/ve-authentication-provider-google/internal/types/runstopper"
 )
 
 type grpcBinding struct {

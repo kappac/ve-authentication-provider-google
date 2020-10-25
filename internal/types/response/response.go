@@ -2,28 +2,10 @@ package response
 
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
-	"github.com/kappac/ve-authentication-provider-google/internal/types/constants"
 	veerror "github.com/kappac/ve-authentication-provider-google/internal/types/error"
 	"github.com/kappac/ve-authentication-provider-google/internal/types/marshaller"
 	"github.com/kappac/ve-authentication-provider-google/internal/types/providerinfo"
 	"github.com/kappac/ve-authentication-provider-google/internal/types/request"
-)
-
-const (
-	basicErrorCode       = constants.TypesBasicErrorCode + 400
-	errorCodeMarshalling = iota + basicErrorCode
-	errorCodeUnmarshalWrongType
-)
-
-var (
-	errorMarshaling = veerror.New(
-		veerror.WithCode(errorCodeMarshalling),
-		veerror.WithDescription("An error during parsing fields"),
-	)
-	errorUnmarshalWrongType = veerror.New(
-		veerror.WithCode(errorCodeUnmarshalWrongType),
-		veerror.WithDescription("A package provided for Unmarshal is of a wrong type"),
-	)
 )
 
 // VEValidateTokenResponse is a wrapper for proto response.
@@ -137,6 +119,18 @@ func (tr *veValidateTokenResponse) Unmarshal(p interface{}) error {
 		tr.Error = veerr
 	} else {
 		return err
+	}
+
+	return nil
+}
+
+func (tr *veValidateTokenResponse) Verify() error {
+	if tr.GetRequest() == nil {
+		return errorVerifyRequestAbsent
+	}
+
+	if tr.GetInfo() == nil && tr.GetError() == nil {
+		return errorVerifyInfoErrorAbsent
 	}
 
 	return nil
