@@ -2,22 +2,7 @@ package request
 
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
-	"github.com/kappac/ve-authentication-provider-google/internal/types/constants"
-	veerror "github.com/kappac/ve-authentication-provider-google/internal/types/error"
 	"github.com/kappac/ve-authentication-provider-google/internal/types/marshaller"
-)
-
-const (
-	basicErrorCode = constants.TypesBasicErrorCode + 300
-	_              = iota + basicErrorCode
-	errorCodeUnmarshalWrongType
-)
-
-var (
-	errorUnmarshalWrongType = veerror.New(
-		veerror.WithCode(errorCodeUnmarshalWrongType),
-		veerror.WithDescription("A package provided for Unmarshal is of a wrong type"),
-	)
 )
 
 // VEValidateTokenRequest is a wrapper for proto request.
@@ -61,6 +46,14 @@ func (tr *veValidateTokenRequest) Unmarshal(p interface{}) error {
 	}
 
 	tr.Token = pbRequest.GetToken()
+
+	return nil
+}
+
+func (tr *veValidateTokenRequest) Verify() error {
+	if tr.GetToken() == "" {
+		return errorVerifyTokenAbsent
+	}
 
 	return nil
 }

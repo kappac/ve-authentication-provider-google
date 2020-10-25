@@ -7,19 +7,6 @@ import (
 	"github.com/kappac/ve-authentication-provider-google/internal/types/marshaller"
 )
 
-const (
-	basicErrorCode = 100
-	_              = iota + basicErrorCode
-	errorCodeUnmarshalWrongType
-)
-
-var (
-	errorUnmarshalWrongType = New(
-		WithCode(errorCodeUnmarshalWrongType),
-		WithDescription("A package provided for Unmarshal is of a wrong type"),
-	)
-)
-
 // VEError is a basic error for VE project
 type VEError interface {
 	error
@@ -74,6 +61,14 @@ func (e *veError) Unmarshal(p interface{}) error {
 
 	e.Code = pbError.GetCode()
 	e.Description = pbError.GetDescription()
+
+	return nil
+}
+
+func (e *veError) Verify() error {
+	if e.GetDescription() == "" {
+		return errorVerifyDescribtionAbsent
+	}
 
 	return nil
 }

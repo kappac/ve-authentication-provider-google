@@ -5,4 +5,5 @@ package marshaller
 type Marshaller interface {
 	Marshal() (interface{}, error)
 	Unmarshal(interface{}) error
+	Verify() error
 }
