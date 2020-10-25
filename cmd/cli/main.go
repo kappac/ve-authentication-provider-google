@@ -80,7 +80,7 @@ func main() {
 		Token: *token,
 	}
 	begin := time.Now()
-	_, err = svc.VEAuthProviderGoogleServiceClient.ValidateToken(root, req)
-
-	_ = logger.Log("method", "ValidateToken", "took", time.Since(begin))
+	resp, err := svc.VEAuthProviderGoogleServiceClient.ValidateToken(root, req)
+	fmt.Println(resp)
+	_ = logger.Log("method", "ValidateToken", "err", err, "took", time.Since(begin))
 }

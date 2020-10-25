@@ -66,30 +66,44 @@ func (tr *veValidateTokenResponse) GetError() veerror.VEError {
 
 func (tr *veValidateTokenResponse) Marshal() (interface{}, error) {
 	var (
-		reqpb, infopb, errpb    interface{}
+		reqpb                   *pb.VEValidateTokenRequest
+		infopb                  *pb.VEProviderInfo
+		errpb                   *pb.VEError
 		reqErr, infoErr, errErr error
 	)
 
 	if req := tr.GetRequest(); req != nil {
-		reqpb, reqErr = req.Marshal()
+		req, reqErr := req.Marshal()
+
+		if reqErr == nil {
+			reqpb = req.(*pb.VEValidateTokenRequest)
+		}
 	}
 
 	if info := tr.GetInfo(); info != nil {
-		infopb, infoErr = info.Marshal()
+		info, infoErr := info.Marshal()
+
+		if infoErr == nil {
+			infopb = info.(*pb.VEProviderInfo)
+		}
 	}
 
 	if err := tr.GetError(); err != nil {
-		errpb, errErr = err.Marshal()
+		err, errErr := err.Marshal()
+
+		if errErr == nil {
+			errpb = err.(*pb.VEError)
+		}
 	}
 
-	if reqErr == nil || infoErr == nil || errErr == nil {
+	if reqErr != nil && infoErr != nil && errErr != nil {
 		return nil, errorMarshaling
 	}
 
 	p := &pb.VEValidateTokenResponse{
-		Request: reqpb.(*pb.VEValidateTokenRequest),
-		Info:    infopb.(*pb.VEProviderInfo),
-		Error:   errpb.(*pb.VEError),
+		Request: reqpb,
+		Info:    infopb,
+		Error:   errpb,
 	}
 
 	return p, nil
