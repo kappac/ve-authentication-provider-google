@@ -1,6 +1,7 @@
 package logger
 
 import (
+	stdlog "log"
 	"os"
 	"time"
 
@@ -26,10 +27,13 @@ func init() {
 	}
 
 	defaultLogger = log.NewLogfmtLogger(
-		log.NewSyncWriter(os.Stdout),
+		log.NewSyncWriter(os.Stderr),
 	)
 	defaultLogger = level.NewFilter(defaultLogger, levelOption)
 	defaultLogger = log.With(defaultLogger, "ts", log.TimestampFormat(time.Now, "15:04:05.9999"))
+
+	stdlog.SetFlags(0)
+	stdlog.SetOutput(log.NewStdlibAdapter(defaultLogger))
 }
 
 // Logger describes methods available to log events.

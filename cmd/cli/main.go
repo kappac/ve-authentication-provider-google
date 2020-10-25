@@ -52,7 +52,7 @@ func (c client) validateToken(t string) *google.Token {
 func main() {
 	fs := flag.NewFlagSet("", flag.ExitOnError)
 	var (
-		addr  = fs.String("addr", ":8002", "Address for gRPC server")
+		addr  = fs.String("addr", ":8000", "Address for gRPC server")
 		token = fs.String("token", "token", "Token to be validated")
 	)
 	flag.Usage = fs.Usage // only show our flags
@@ -80,6 +80,7 @@ func main() {
 		Token: *token,
 	}
 	begin := time.Now()
-	reply, err := svc.VEAuthProviderGoogleServiceClient.ValidateToken(root, req)
-	_ = logger.Log("method", "ValidateToken", "token", token, "info", reply.Info, "error", reply.Error, "took", time.Since(begin))
+	_, err = svc.VEAuthProviderGoogleServiceClient.ValidateToken(root, req)
+
+	_ = logger.Log("method", "ValidateToken", "took", time.Since(begin))
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/kappac/ve-authentication-provider-google/internal/google"
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
+	verror "github.com/kappac/ve-authentication-provider-google/internal/types/error"
 )
 
 type GrpcBinding struct {
@@ -18,14 +19,22 @@ func (b GrpcBinding) ValidateToken(ctx context.Context, req *pb.VEValidateTokenR
 	)
 
 	if token, err = b.VEAuthenticationProviderGoogle.ValidateToken(req.Token); err != nil {
+		var veErrPB = &pb.VEError{
+			Code:        100,
+			Description: err.Error(),
+		}
+
+		if veErr, ok := err.(verror.VEError); ok {
+			if errpb, err := veErr.Marshal(); err == nil {
+				veErrPB = errpb.(*pb.VEError)
+			}
+		}
+
 		res := &pb.VEValidateTokenResponse{
 			Request: &pb.VEValidateTokenRequest{
 				Token: req.Token,
 			},
-			Error: &pb.VEError{
-				Code:        100,
-				Description: err.Error(),
-			},
+			Error: veErrPB,
 		}
 
 		return res, nil

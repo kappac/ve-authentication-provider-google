@@ -13,7 +13,8 @@ type veAuthenticationProviderGoogle struct {
 	tv google.TokenVerifier
 }
 
-func NewService() *veAuthenticationProviderGoogle {
+// New constructs a VEAuthenticationProviderGoogle instance.
+func New() VEAuthenticationProviderGoogle {
 	tv := google.NewTokenVerifier()
 
 	go tv.Run()
