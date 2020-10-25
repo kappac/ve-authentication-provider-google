@@ -22,5 +22,5 @@ var (
 )
 
 func init() {
-	ParsePrefix(globalEnvPrefix, &Global)
+	Parse(&Global, WithEnvPrefix(globalEnvPrefix))
 }

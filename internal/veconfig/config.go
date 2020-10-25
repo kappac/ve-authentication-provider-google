@@ -8,23 +8,37 @@ const (
 	serviceEnvPrefix = "VE_SERVICE_"
 )
 
+type parseOptions struct {
+	envPrefix string
+}
+
+// ParseOption is an option updater for Parse function.
+type ParseOption func(o *parseOptions)
+
 // Parse populates "p" with values provided as
 // service parameters. The parameters are read
-// from env variables prefixed with "VE_SERVICE_".
-func Parse(p ServiceParameters) error {
-	return parse(serviceEnvPrefix, p)
-}
+// from env variables.
+// Default env prefix is "VE_SERVICE_".
+func Parse(p ServiceParameters, os ...ParseOption) error {
+	options := &parseOptions{
+		envPrefix: serviceEnvPrefix,
+	}
 
-// ParsePrefix populates "p" with values provided as
-// service parameters. The parameters are read
-// from env variables prefixed with "ep".
-func ParsePrefix(ep string, p ServiceParameters) error {
-	return parse(ep, p)
-}
+	for _, o := range os {
+		o(options)
+	}
 
-func parse(ep string, p ServiceParameters) error {
 	c := config.New(
-		config.WithStrippedPrefix(ep),
+		config.WithStrippedPrefix(options.envPrefix),
 	)
+
 	return c.Scan(p)
+}
+
+// WithEnvPrefix sets a prefix to be checked against
+// env variables.
+func WithEnvPrefix(p string) ParseOption {
+	return func(o *parseOptions) {
+		o.envPrefix = p
+	}
 }
