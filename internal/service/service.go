@@ -2,43 +2,77 @@ package service
 
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/google"
+	"github.com/kappac/ve-authentication-provider-google/internal/runstopper"
+	veerror "github.com/kappac/ve-authentication-provider-google/internal/types/error"
+	"github.com/kappac/ve-authentication-provider-google/internal/types/providerinfo"
+	"github.com/kappac/ve-authentication-provider-google/internal/types/request"
+	"github.com/kappac/ve-authentication-provider-google/internal/types/response"
 )
 
-// VEAuthenticationProviderGoogle represents service API
-type VEAuthenticationProviderGoogle interface {
-	ValidateToken(t string) (*google.Token, error)
+type authProviderGoogle interface {
+	runstopper.RunStopper
+	ValidateToken(req request.VEValidateTokenRequest) (response.VEValidateTokenResponse, error)
 }
 
-type veAuthenticationProviderGoogle struct {
+type authProviderGoogleImpl struct {
 	tv google.TokenVerifier
 }
 
-// New constructs a VEAuthenticationProviderGoogle instance.
-func New() VEAuthenticationProviderGoogle {
+func newAuthProviderGoogle() authProviderGoogle {
 	tv := google.NewTokenVerifier()
-
-	return &veAuthenticationProviderGoogle{
+	p := &authProviderGoogleImpl{
 		tv: tv,
+	}
+	return p
+}
+
+func (p *authProviderGoogleImpl) ValidateToken(req request.VEValidateTokenRequest) (response.VEValidateTokenResponse, error) {
+	var (
+		veinfo providerinfo.VEProviderInfo
+		veerr  veerror.VEError
+	)
+
+	if t, err := p.tv.Verify(req.GetToken()); err == nil {
+		veinfo = providerinfo.New(
+			providerinfo.WithFullName(t.FullName),
+			providerinfo.WithGivenName(t.GivenName),
+			providerinfo.WithFamilyName(t.FamilyName),
+			providerinfo.WithEmail(t.Email),
+			providerinfo.WithPicture(t.Picture),
+		)
+	} else {
+		if e, ok := err.(veerror.VEError); ok {
+			veerr = e
+		}
+
+		veerr = veerror.New(
+			veerror.WithDescription(err.Error()),
+		)
+	}
+
+	resp := response.New(
+		response.WithRequest(req),
+		response.WithInfo(veinfo),
+		response.WithError(veerr),
+	)
+
+	return resp, nil
+}
+
+func (p *authProviderGoogleImpl) Run() error {
+	c := make(chan bool)
+
+	go (func() {
+		p.tv.Run()
+		c <- true
+	})()
+
+	select {
+	case <-c:
+		return nil
 	}
 }
 
-func (s *veAuthenticationProviderGoogle) ValidateToken(t string) (*google.Token, error) {
-	return s.tv.Verify(t)
-}
-
-func (s *veAuthenticationProviderGoogle) Run() error {
-	var ch = make(chan bool)
-
-	go (func() {
-		s.tv.Run()
-		ch <- true
-	})()
-
-	<-ch
-
-	return nil
-}
-
-func (s *veAuthenticationProviderGoogle) Stop() error {
-	return s.tv.Stop()
+func (p *authProviderGoogleImpl) Stop() error {
+	return p.tv.Stop()
 }

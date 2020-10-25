@@ -1,4 +1,4 @@
-package validatetokenrequest
+package request
 
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"

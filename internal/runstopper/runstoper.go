@@ -1,4 +1,4 @@
-package launch
+package runstopper
 
 // Runner ...
 type Runner interface {

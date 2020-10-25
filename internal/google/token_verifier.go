@@ -74,8 +74,6 @@ func (tv *tokenVerifier) Stop() error {
 
 	tv.closeCh <- cc
 
-	tv.certs.stop()
-
 	select {
 	case errc := <-cc:
 		return errc

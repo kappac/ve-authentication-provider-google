@@ -1,4 +1,4 @@
-package validatetokenrequest
+package request
 
 // OptionUpdater updates Error properties.
 type OptionUpdater func(*veValidateTokenRequest)
