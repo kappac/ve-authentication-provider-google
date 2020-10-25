@@ -7,8 +7,8 @@ import (
 	"github.com/kappac/ve-authentication-provider-google/internal/config"
 	"github.com/kappac/ve-authentication-provider-google/internal/launch"
 	"github.com/kappac/ve-authentication-provider-google/internal/logger"
-	"github.com/kappac/ve-authentication-provider-google/internal/runstopper"
 	"github.com/kappac/ve-authentication-provider-google/internal/service"
+	"github.com/kappac/ve-authentication-provider-google/internal/types/runstopper"
 )
 
 func main() {
