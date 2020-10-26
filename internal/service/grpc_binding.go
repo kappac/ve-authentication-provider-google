@@ -20,6 +20,10 @@ func (b grpcBinding) ValidateToken(ctx context.Context, req *pb.VEValidateTokenR
 		return nil, err
 	}
 
+	if err := veRequest.Verify(); err != nil {
+		return nil, err
+	}
+
 	resp, _ := b.svc.ValidateToken(veRequest)
 	resppb, pberr := resp.Marshal()
 	if pberr != nil {
