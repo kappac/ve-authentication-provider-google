@@ -60,17 +60,14 @@ func (p *authProviderGoogleImpl) ValidateToken(req request.VEValidateTokenReques
 }
 
 func (p *authProviderGoogleImpl) Run() error {
-	c := make(chan bool)
+	c := make(chan error)
 
 	go (func() {
 		p.tv.Run()
-		c <- true
+		c <- nil
 	})()
 
-	select {
-	case <-c:
-		return nil
-	}
+	return <-c
 }
 
 func (p *authProviderGoogleImpl) Stop() error {

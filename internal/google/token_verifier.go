@@ -14,11 +14,10 @@ type TokenVerifier interface {
 }
 
 type tokenVerifier struct {
-	logger    logger.Logger
-	certs     *oauthCertificates
-	closeCh   chan chan error
-	isClosing bool
-	err       error
+	logger  logger.Logger
+	certs   *oauthCertificates
+	closeCh chan chan error
+	err     error
 }
 
 // Token represent token data we are able to get
@@ -52,17 +51,14 @@ func NewTokenVerifier() TokenVerifier {
 func (tv *tokenVerifier) Run() {
 	tv.logger.Debugm("starting")
 
-	for !tv.isClosing {
-		select {
-		case errc := <-tv.closeCh:
-			tv.isClosing = true
-			tv.err = tv.certs.stop()
+	select {
+	case errc := <-tv.closeCh:
+		tv.err = tv.certs.stop()
 
-			tv.logger.Debugm("closing", "err", tv.err)
+		tv.logger.Debugm("closing", "err", tv.err)
 
-			errc <- tv.err
-			tv.closeChannels()
-		}
+		tv.closeChannels()
+		errc <- tv.err
 	}
 }
 
@@ -71,13 +67,8 @@ func (tv *tokenVerifier) Stop() error {
 	tv.logger.Debugm("stopping")
 
 	cc := make(chan error)
-
 	tv.closeCh <- cc
-
-	select {
-	case errc := <-cc:
-		return errc
-	}
+	return <-cc
 }
 
 // Verify validates token.

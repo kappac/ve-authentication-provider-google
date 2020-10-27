@@ -112,13 +112,8 @@ func (f *fetcher) stop() error {
 	f.logger.Debugm("stopping")
 
 	cc := make(chan error)
-
 	f.closeCh <- cc
-
-	select {
-	case errc := <-cc:
-		return errc
-	}
+	return <-cc
 }
 
 func (f *fetcher) subscribe() chan fetcherCertsMap {

@@ -50,8 +50,8 @@ func (oc *oauthCertificates) run() {
 
 			oc.logger.Debugm("closing", "err", oc.err)
 
-			errc <- oc.err
 			oc.closeChannels()
+			errc <- oc.err
 		case certsMap := <-oc.certsUpdateCh:
 			oc.err = oc.processCertsMap(certsMap)
 
@@ -64,13 +64,8 @@ func (oc *oauthCertificates) stop() error {
 	oc.logger.Debugm("stopping")
 
 	cc := make(chan error)
-
 	oc.closeCh <- cc
-
-	select {
-	case errc := <-cc:
-		return errc
-	}
+	return <-cc
 }
 
 func (oc *oauthCertificates) closeChannels() {
