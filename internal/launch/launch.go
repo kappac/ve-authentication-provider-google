@@ -58,10 +58,7 @@ func Launch(fns ...Function) chan error {
 				log.Debugm("Stopping")
 				for _, exitCh := range exitChs {
 					exitCh <- true
-
-					select {
-					case <-exitCh:
-					}
+					<-exitCh
 				}
 
 				isClosing = true
