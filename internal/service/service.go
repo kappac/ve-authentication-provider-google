@@ -2,11 +2,11 @@ package service
 
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/google"
-	veerror "github.com/kappac/ve-authentication-provider-google/internal/types/error"
-	"github.com/kappac/ve-authentication-provider-google/internal/types/providerinfo"
-	"github.com/kappac/ve-authentication-provider-google/internal/types/request"
-	"github.com/kappac/ve-authentication-provider-google/internal/types/response"
 	"github.com/kappac/ve-authentication-provider-google/internal/types/runstopper"
+	veerror "github.com/kappac/ve-authentication-provider-google/pkg/error"
+	"github.com/kappac/ve-authentication-provider-google/pkg/providerinfo"
+	"github.com/kappac/ve-authentication-provider-google/pkg/request"
+	"github.com/kappac/ve-authentication-provider-google/pkg/response"
 )
 
 type authProviderGoogle interface {

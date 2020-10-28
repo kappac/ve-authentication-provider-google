@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
-	"github.com/kappac/ve-authentication-provider-google/internal/types/marshaller"
+	"github.com/kappac/ve-authentication-provider-google/pkg/marshaller"
 )
 
 // VEError is a basic error for VE project
