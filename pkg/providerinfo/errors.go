@@ -2,7 +2,7 @@ package providerinfo
 
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/types/constants"
-	veerror "github.com/kappac/ve-authentication-provider-google/internal/types/error"
+	veerror "github.com/kappac/ve-authentication-provider-google/pkg/error"
 )
 
 const (

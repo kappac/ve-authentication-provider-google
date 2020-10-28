@@ -2,10 +2,10 @@ package response
 
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
-	veerror "github.com/kappac/ve-authentication-provider-google/internal/types/error"
-	"github.com/kappac/ve-authentication-provider-google/internal/types/marshaller"
-	"github.com/kappac/ve-authentication-provider-google/internal/types/providerinfo"
-	"github.com/kappac/ve-authentication-provider-google/internal/types/request"
+	veerror "github.com/kappac/ve-authentication-provider-google/pkg/error"
+	"github.com/kappac/ve-authentication-provider-google/pkg/marshaller"
+	"github.com/kappac/ve-authentication-provider-google/pkg/providerinfo"
+	"github.com/kappac/ve-authentication-provider-google/pkg/request"
 )
 
 // VEValidateTokenResponse is a wrapper for proto response.
