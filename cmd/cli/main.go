@@ -31,6 +31,7 @@ func main() {
 		_ = log.Errorm("DialingFail", "err", err)
 		os.Exit(1)
 	}
+	defer client.Close()
 
 	begin := time.Now()
 	req := request.New(request.WithToken(*token))
