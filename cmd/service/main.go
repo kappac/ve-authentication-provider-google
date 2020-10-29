@@ -8,7 +8,6 @@ import (
 	"github.com/kappac/ve-authentication-provider-google/internal/launch"
 	"github.com/kappac/ve-authentication-provider-google/internal/logger"
 	"github.com/kappac/ve-authentication-provider-google/internal/service"
-	"github.com/kappac/ve-authentication-provider-google/internal/types/runstopper"
 )
 
 func main() {
@@ -22,29 +21,8 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 
 	launchErr := <-launch.Launch(
-		svcLauncher(svc),
+		launch.WithRunStopper(svc),
 	)
 
 	log.Infom("Terminating", "err", launchErr)
-}
-
-func svcLauncher(svc runstopper.RunStopper) launch.Function {
-	return func(errCh chan<- error, exitCh chan bool) {
-		var (
-			isClosing bool
-		)
-
-		go (func() {
-			errCh <- svc.Run()
-		})()
-
-		for !isClosing {
-			select {
-			case <-exitCh:
-				isClosing = true
-				_ = svc.Stop()
-				exitCh <- true
-			}
-		}
-	}
 }
