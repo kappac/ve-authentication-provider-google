@@ -84,8 +84,8 @@ func New(opts ...NewOption) Service {
 	s.endpoints = make(map[Probe]endpoint.Endpoint, sourcesAmount)
 
 	s.subscribeSources()
-	s.generateEndpoints()
 	go s.listenSubscribes()
+	s.generateEndpoints()
 
 	return s
 }
