@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/kappac/ve-authentication-provider-google/internal/grpcclient"
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
 	"github.com/kappac/ve-authentication-provider-google/pkg/providerinfo"
 	"github.com/kappac/ve-authentication-provider-google/pkg/request"
@@ -24,7 +25,7 @@ type VEAuthenticationProviderGoogleClient interface {
 }
 
 type veAuthenticationProviderGoogleClient struct {
-	client  *grpc.ClientConn
+	gc      grpcclient.GrpcClient
 	service pb.VEAuthProviderGoogleServiceClient
 	context context.Context
 }
@@ -32,33 +33,22 @@ type veAuthenticationProviderGoogleClient struct {
 // New constructs new VEAuthenticationProviderGoogleClient instance
 func New() VEAuthenticationProviderGoogleClient {
 	return &veAuthenticationProviderGoogleClient{
+		gc:      grpcclient.New(),
 		context: context.TODO(),
 	}
 }
 
 func (c *veAuthenticationProviderGoogleClient) Dial(addr string, opts ...grpc.DialOption) error {
-	opts = append(
-		opts,
-		grpc.WithBlock(),
-		grpc.WithTimeout(dialTimeout),
-		grpc.WithDefaultCallOptions(
-			grpc.WaitForReady(false),
-		),
-	)
-	cc, err := grpc.Dial(addr, opts...)
-
-	if err != nil {
+	if err := c.gc.Dial(addr, opts...); err != nil {
 		return err
 	}
-
-	c.client = cc
-	c.service = pb.NewVEAuthProviderGoogleServiceClient(c.client)
+	c.service = pb.NewVEAuthProviderGoogleServiceClient(c.gc.GetClientConn())
 
 	return nil
 }
 
 func (c *veAuthenticationProviderGoogleClient) Close() error {
-	return c.client.Close()
+	return c.gc.Close()
 }
 
 func (c *veAuthenticationProviderGoogleClient) ValidateToken(r request.VEValidateTokenRequest) (providerinfo.VEProviderInfo, error) {
