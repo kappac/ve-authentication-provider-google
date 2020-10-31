@@ -3,7 +3,7 @@ package google
 import (
 	"fmt"
 
-	veerror "github.com/kappac/ve-authentication-provider-google/pkg/error"
+	veerror "github.com/kappac/ve-authentication-provider-google/pkg/proto/error"
 )
 
 const (

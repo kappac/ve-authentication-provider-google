@@ -8,8 +8,8 @@ import (
 
 	"github.com/kappac/ve-authentication-provider-google/internal/logger"
 	"github.com/kappac/ve-authentication-provider-google/pkg/client"
-	"github.com/kappac/ve-authentication-provider-google/pkg/context"
-	"github.com/kappac/ve-authentication-provider-google/pkg/request"
+	"github.com/kappac/ve-authentication-provider-google/pkg/proto/context"
+	"github.com/kappac/ve-authentication-provider-google/pkg/proto/request"
 	"google.golang.org/grpc"
 )
 

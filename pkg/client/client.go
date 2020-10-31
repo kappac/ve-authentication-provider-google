@@ -6,9 +6,9 @@ import (
 
 	"github.com/kappac/ve-authentication-provider-google/internal/grpcclient"
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
-	"github.com/kappac/ve-authentication-provider-google/pkg/providerinfo"
-	"github.com/kappac/ve-authentication-provider-google/pkg/request"
-	"github.com/kappac/ve-authentication-provider-google/pkg/response"
+	"github.com/kappac/ve-authentication-provider-google/pkg/proto/providerinfo"
+	"github.com/kappac/ve-authentication-provider-google/pkg/proto/request"
+	"github.com/kappac/ve-authentication-provider-google/pkg/proto/response"
 	"google.golang.org/grpc"
 )
 

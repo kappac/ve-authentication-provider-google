@@ -2,13 +2,13 @@ package providerinfo
 
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
-	"github.com/kappac/ve-authentication-provider-google/pkg/marshaller"
+	"github.com/kappac/ve-authentication-provider-google/pkg/proto"
 )
 
 // VEProviderInfo contains an information about user,
 // necessary to provide a service.
 type VEProviderInfo interface {
-	marshaller.Marshaller
+	proto.Marshaller
 
 	GetFullName() string
 	GetGivenName() string

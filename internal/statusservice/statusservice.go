@@ -9,7 +9,6 @@ import (
 	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/kappac/ve-authentication-provider-google/internal/logger"
-	"github.com/kappac/ve-authentication-provider-google/internal/types/runstopper"
 )
 
 // Probe type
@@ -51,7 +50,7 @@ type SourceSubscriber interface {
 
 // StatusService starts an http server with health check endpoints.
 type StatusService interface {
-	runstopper.RunStopper
+	RunStopper
 }
 
 type statusService struct {

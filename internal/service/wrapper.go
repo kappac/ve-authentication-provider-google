@@ -6,13 +6,12 @@ import (
 	"github.com/kappac/ve-authentication-provider-google/internal/logger"
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
 	"github.com/kappac/ve-authentication-provider-google/internal/statusservice"
-	"github.com/kappac/ve-authentication-provider-google/internal/types/runstopper"
 	"google.golang.org/grpc"
 )
 
 // VEAuthenticationProviderGoogle manages service API.
 type VEAuthenticationProviderGoogle interface {
-	runstopper.RunStopper
+	statusservice.RunStopper
 	GetStatisticsSource() statusservice.SourceSubscriber
 }
 

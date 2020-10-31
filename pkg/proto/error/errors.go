@@ -1,7 +1,11 @@
 package error
 
+import (
+	"github.com/kappac/ve-authentication-provider-google/pkg/proto"
+)
+
 const (
-	basicErrorCode = 100
+	basicErrorCode = proto.BasicErrorCode + 1000
 	_              = iota + basicErrorCode
 	errorCodeUnmarshalWrongType
 	errorCodeVerifyDescribtionAbsent

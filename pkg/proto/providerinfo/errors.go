@@ -1,24 +1,19 @@
-package request
+package providerinfo
 
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/types/constants"
-	veerror "github.com/kappac/ve-authentication-provider-google/pkg/error"
+	veerror "github.com/kappac/ve-authentication-provider-google/pkg/proto/error"
 )
 
 const (
-	basicErrorCode = constants.TypesBasicErrorCode + 300
+	basicErrorCode = constants.TypesBasicErrorCode + 200
 	_              = iota + basicErrorCode
 	errorCodeUnmarshalWrongType
-	errorCodeVerifyTokenAbsent
 )
 
 var (
 	errorUnmarshalWrongType = veerror.New(
 		veerror.WithCode(errorCodeUnmarshalWrongType),
 		veerror.WithDescription("A package provided for Unmarshal is of a wrong type"),
-	)
-	errorVerifyTokenAbsent = veerror.New(
-		veerror.WithCode(errorCodeVerifyTokenAbsent),
-		veerror.WithDescription("Token is absent"),
 	)
 )
