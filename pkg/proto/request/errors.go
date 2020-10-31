@@ -1,12 +1,12 @@
 package request
 
 import (
-	"github.com/kappac/ve-authentication-provider-google/internal/types/constants"
-	veerror "github.com/kappac/ve-authentication-provider-google/pkg/error"
+	"github.com/kappac/ve-authentication-provider-google/internal/constants"
+	veerror "github.com/kappac/ve-authentication-provider-google/pkg/proto/error"
 )
 
 const (
-	basicErrorCode = constants.TypesBasicErrorCode + 300
+	basicErrorCode = constants.ServiceBasicErrorCode + 300
 	_              = iota + basicErrorCode
 	errorCodeUnmarshalWrongType
 	errorCodeVerifyTokenAbsent

@@ -1,4 +1,4 @@
-package marshaller
+package proto
 
 // Marshaller used for governing the process of serializing
 // to/from PB packets

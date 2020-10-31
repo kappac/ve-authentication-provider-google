@@ -1,4 +1,4 @@
-package runstopper
+package statusservice
 
 // Runner ...
 type Runner interface {

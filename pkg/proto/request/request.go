@@ -2,12 +2,12 @@ package request
 
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
-	"github.com/kappac/ve-authentication-provider-google/pkg/marshaller"
+	"github.com/kappac/ve-authentication-provider-google/pkg/proto"
 )
 
 // VEValidateTokenRequest is a wrapper for proto request.
 type VEValidateTokenRequest interface {
-	marshaller.Marshaller
+	proto.Marshaller
 
 	GetToken() string
 }

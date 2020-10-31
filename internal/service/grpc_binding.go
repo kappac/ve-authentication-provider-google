@@ -4,12 +4,12 @@ import (
 	"context"
 
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
-	"github.com/kappac/ve-authentication-provider-google/internal/types/runstopper"
-	"github.com/kappac/ve-authentication-provider-google/pkg/request"
+	"github.com/kappac/ve-authentication-provider-google/internal/statusservice"
+	"github.com/kappac/ve-authentication-provider-google/pkg/proto/request"
 )
 
 type grpcBinding struct {
-	runstopper.RunStopper
+	statusservice.RunStopper
 
 	svc authProviderGoogle
 }

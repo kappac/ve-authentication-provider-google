@@ -7,7 +7,7 @@ import (
 	"syscall"
 
 	"github.com/kappac/ve-authentication-provider-google/internal/logger"
-	"github.com/kappac/ve-authentication-provider-google/internal/types/runstopper"
+	"github.com/kappac/ve-authentication-provider-google/internal/statusservice"
 )
 
 var (
@@ -77,7 +77,7 @@ func Launch(fns ...Function) chan error {
 
 // WithRunStopper creates a function suitable for Launch to
 // deal with RunStopper.
-func WithRunStopper(rs runstopper.RunStopper) Function {
+func WithRunStopper(rs statusservice.RunStopper) Function {
 	return func(errCh chan<- error, exitCh chan error) {
 		var (
 			isClosing bool

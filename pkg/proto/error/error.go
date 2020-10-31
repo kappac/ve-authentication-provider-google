@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
-	"github.com/kappac/ve-authentication-provider-google/pkg/marshaller"
+	"github.com/kappac/ve-authentication-provider-google/pkg/proto"
 )
 
 // VEError is a basic error for VE project
 type VEError interface {
 	error
-	marshaller.Marshaller
+	proto.Marshaller
 
 	GetCode() int32
 	GetDescription() string
