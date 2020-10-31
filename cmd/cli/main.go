@@ -8,6 +8,7 @@ import (
 
 	"github.com/kappac/ve-authentication-provider-google/internal/logger"
 	"github.com/kappac/ve-authentication-provider-google/pkg/client"
+	"github.com/kappac/ve-authentication-provider-google/pkg/context"
 	"github.com/kappac/ve-authentication-provider-google/pkg/request"
 	"google.golang.org/grpc"
 )
@@ -34,8 +35,9 @@ func main() {
 	defer client.Close()
 
 	begin := time.Now()
+	ctx := context.New("", "", "")
 	req := request.New(request.WithToken(*token))
-	info, err := client.ValidateToken(req)
+	info, err := client.ValidateToken(ctx, req)
 
 	fmt.Printf("Info: %v\n", info)
 	_ = log.Infom("ValidateToken", "err", err, "took", time.Since(begin))
