@@ -49,12 +49,12 @@ type SourceSubscriber interface {
 	Unsubscribe() error
 }
 
-// Service starts an http server with health check endpoints.
-type Service interface {
+// StatusService starts an http server with health check endpoints.
+type StatusService interface {
 	runstopper.RunStopper
 }
 
-type service struct {
+type statusService struct {
 	logger       logger.Logger
 	address      string
 	server       *http.Server
@@ -67,8 +67,8 @@ type service struct {
 }
 
 // New constructs new instance of a Service
-func New(opts ...NewOption) Service {
-	s := &service{
+func New(opts ...NewOption) StatusService {
+	s := &statusService{
 		logger: logger.New(
 			logger.WithEntity("StatusService"),
 		),
@@ -96,7 +96,7 @@ func New(opts ...NewOption) Service {
 	return s
 }
 
-func (s *service) Run() error {
+func (s *statusService) Run() error {
 	s.logger.Debugm("Run")
 
 	if len(s.sources) == 0 {
@@ -106,7 +106,7 @@ func (s *service) Run() error {
 	return s.runServer()
 }
 
-func (s *service) Stop() error {
+func (s *statusService) Stop() error {
 	s.logger.Debugm("Stop")
 
 	s.isClosing = true
@@ -114,7 +114,7 @@ func (s *service) Stop() error {
 	return s.stopServer()
 }
 
-func (s *service) subscribeSources() {
+func (s *statusService) subscribeSources() {
 	s.logger.Debugm("subscribeSource")
 
 	for k, v := range s.sources {
@@ -127,7 +127,7 @@ func (s *service) subscribeSources() {
 	}
 }
 
-func (s *service) unsubscribeSources() error {
+func (s *statusService) unsubscribeSources() error {
 	s.logger.Debugm("unsubscribeSources")
 
 	var err error
@@ -139,7 +139,7 @@ func (s *service) unsubscribeSources() error {
 	return err
 }
 
-func (s *service) listenSubscribes() {
+func (s *statusService) listenSubscribes() {
 	s.logger.Debugm("ListenSubscribes")
 
 	for !s.isClosing {
@@ -155,19 +155,19 @@ func (s *service) listenSubscribes() {
 	}
 }
 
-func (s *service) processChannelRecv(p Probe, sd SourceData) {
+func (s *statusService) processChannelRecv(p Probe, sd SourceData) {
 	s.logger.Debugm("processChannelRecv", "probe", p)
 	s.datas[p] = sd
 }
 
-func (s *service) generateEndpoints() {
+func (s *statusService) generateEndpoints() {
 	for p := range s.sources {
 		s.logger.Debugm("generateEndpoints", "probe", p)
 		s.endpoints[p] = s.newEndpoint(p)
 	}
 }
 
-func (s *service) runServer() error {
+func (s *statusService) runServer() error {
 	s.logger.Debugm("runServer")
 
 	handler := http.NewServeMux()
@@ -188,12 +188,12 @@ func (s *service) runServer() error {
 	return s.server.ListenAndServe()
 }
 
-func (s *service) stopServer() error {
+func (s *statusService) stopServer() error {
 	s.logger.Debugm("stopServer")
 	return s.server.Close()
 }
 
-func (s *service) newEndpoint(p Probe) endpoint.Endpoint {
+func (s *statusService) newEndpoint(p Probe) endpoint.Endpoint {
 	return func(_ context.Context, _ interface{}) (interface{}, error) {
 		sd, ok := s.datas[p]
 		if !ok {
