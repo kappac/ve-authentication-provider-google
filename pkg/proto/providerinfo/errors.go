@@ -1,12 +1,12 @@
 package providerinfo
 
 import (
-	"github.com/kappac/ve-authentication-provider-google/internal/types/constants"
+	"github.com/kappac/ve-authentication-provider-google/internal/constants"
 	veerror "github.com/kappac/ve-authentication-provider-google/pkg/proto/error"
 )
 
 const (
-	basicErrorCode = constants.TypesBasicErrorCode + 200
+	basicErrorCode = constants.ServiceBasicErrorCode + 200
 	_              = iota + basicErrorCode
 	errorCodeUnmarshalWrongType
 )
