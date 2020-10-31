@@ -21,20 +21,18 @@ const (
 type VEAuthenticationProviderGoogleClient interface {
 	Dial(addr string, opts ...grpc.DialOption) error
 	Close() error
-	ValidateToken(request.VEValidateTokenRequest) (providerinfo.VEProviderInfo, error)
+	ValidateToken(c context.Context, r request.VEValidateTokenRequest) (providerinfo.VEProviderInfo, error)
 }
 
 type veAuthenticationProviderGoogleClient struct {
 	gc      grpcclient.GrpcClient
 	service pb.VEAuthProviderGoogleServiceClient
-	context context.Context
 }
 
 // New constructs new VEAuthenticationProviderGoogleClient instance
 func New() VEAuthenticationProviderGoogleClient {
 	return &veAuthenticationProviderGoogleClient{
-		gc:      grpcclient.New(),
-		context: context.TODO(),
+		gc: grpcclient.New(),
 	}
 }
 
@@ -51,7 +49,7 @@ func (c *veAuthenticationProviderGoogleClient) Close() error {
 	return c.gc.Close()
 }
 
-func (c *veAuthenticationProviderGoogleClient) ValidateToken(r request.VEValidateTokenRequest) (providerinfo.VEProviderInfo, error) {
+func (c *veAuthenticationProviderGoogleClient) ValidateToken(ctx context.Context, r request.VEValidateTokenRequest) (providerinfo.VEProviderInfo, error) {
 	if err := r.Verify(); err != nil {
 		return nil, err
 	}
@@ -61,7 +59,7 @@ func (c *veAuthenticationProviderGoogleClient) ValidateToken(r request.VEValidat
 		return nil, err
 	}
 
-	resp, err := c.service.ValidateToken(c.context, req.(*pb.VEValidateTokenRequest))
+	resp, err := c.service.ValidateToken(ctx, req.(*pb.VEValidateTokenRequest))
 	if err != nil {
 		return nil, err
 	}
