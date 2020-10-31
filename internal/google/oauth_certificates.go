@@ -8,11 +8,17 @@ import (
 
 type oauthCertificatesMap map[string]*pem.Block
 
+type oauthCertificatesStatisticsUpdate struct {
+	keys []string
+	err  error
+}
+
 type oauthCertificates struct {
 	logger        logger.Logger
 	f             *fetcher
 	certsMap      oauthCertificatesMap
-	certsUpdateCh chan fetcherCertsMap
+	certsUpdateCh chan fetcherUpdateCerts
+	statisticsCh  chan oauthCertificatesStatisticsUpdate
 	closeCh       chan chan error
 	isClosing     bool
 	err           error
@@ -26,6 +32,7 @@ func newOauthCertificates() *oauthCertificates {
 	)
 
 	certsUpdateCh := f.subscribe()
+	statisticsCh := make(chan oauthCertificatesStatisticsUpdate)
 	closeCh := make(chan chan error)
 
 	go f.run()
@@ -35,6 +42,7 @@ func newOauthCertificates() *oauthCertificates {
 		f:             f,
 		certsUpdateCh: certsUpdateCh,
 		closeCh:       closeCh,
+		statisticsCh:  statisticsCh,
 	}
 }
 
@@ -50,10 +58,23 @@ func (oc *oauthCertificates) run() {
 
 			oc.logger.Debugm("closing", "err", oc.err)
 
-			oc.closeChannels()
 			errc <- oc.err
-		case certsMap := <-oc.certsUpdateCh:
-			oc.err = oc.processCertsMap(certsMap)
+			oc.closeChannels()
+		case certsUpdate, ok := <-oc.certsUpdateCh:
+			if !ok {
+				break
+			}
+
+			oc.err = certsUpdate.err
+
+			if oc.err == nil {
+				oc.err = oc.processCertsMap(certsUpdate.certs)
+			}
+
+			oc.statisticsCh <- oauthCertificatesStatisticsUpdate{
+				keys: oc.getKeys(),
+				err:  oc.err,
+			}
 
 			oc.logger.Infom("certificates processed", "err", oc.err)
 		}
@@ -69,6 +90,7 @@ func (oc *oauthCertificates) stop() error {
 }
 
 func (oc *oauthCertificates) closeChannels() {
+	close(oc.statisticsCh)
 	close(oc.closeCh)
 }
 
@@ -105,4 +127,18 @@ func (oc *oauthCertificates) get(k string) (*pem.Block, error) {
 	}
 
 	return b, nil
+}
+
+func (oc *oauthCertificates) subscribeStatistics() <-chan oauthCertificatesStatisticsUpdate {
+	return oc.statisticsCh
+}
+
+func (oc *oauthCertificates) getKeys() []string {
+	var r []string
+
+	for k := range oc.certsMap {
+		r = append(r, k)
+	}
+
+	return r
 }

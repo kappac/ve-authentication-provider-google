@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
+	"github.com/kappac/ve-authentication-provider-google/internal/logger"
 	"github.com/kappac/ve-authentication-provider-google/internal/types/runstopper"
 )
 
@@ -44,7 +45,8 @@ type SourceData interface {
 
 // SourceSubscriber ...
 type SourceSubscriber interface {
-	Subscribe() chan<- SourceData
+	Subscribe() <-chan SourceData
+	Unsubscribe() error
 }
 
 // Service starts an http server with health check endpoints.
@@ -53,6 +55,7 @@ type Service interface {
 }
 
 type service struct {
+	logger       logger.Logger
 	address      string
 	server       *http.Server
 	sources      map[Probe]SourceSubscriber
@@ -66,6 +69,9 @@ type service struct {
 // New constructs new instance of a Service
 func New(opts ...NewOption) Service {
 	s := &service{
+		logger: logger.New(
+			logger.WithEntity("StatusService"),
+		),
 		sources: make(map[Probe]SourceSubscriber),
 	}
 
@@ -84,13 +90,15 @@ func New(opts ...NewOption) Service {
 	s.endpoints = make(map[Probe]endpoint.Endpoint, sourcesAmount)
 
 	s.subscribeSources()
-	go s.listenSubscribes()
 	s.generateEndpoints()
+	go s.listenSubscribes()
 
 	return s
 }
 
 func (s *service) Run() error {
+	s.logger.Debugm("Run")
+
 	if len(s.sources) == 0 {
 		return errorNoProbesConfigured
 	}
@@ -99,11 +107,16 @@ func (s *service) Run() error {
 }
 
 func (s *service) Stop() error {
+	s.logger.Debugm("Stop")
+
 	s.isClosing = true
+	s.unsubscribeSources()
 	return s.stopServer()
 }
 
 func (s *service) subscribeSources() {
+	s.logger.Debugm("subscribeSource")
+
 	for k, v := range s.sources {
 		nextCaseIndex := len(s.subsProbeMap)
 		s.subscribes[nextCaseIndex] = reflect.SelectCase{
@@ -114,34 +127,55 @@ func (s *service) subscribeSources() {
 	}
 }
 
+func (s *service) unsubscribeSources() error {
+	s.logger.Debugm("unsubscribeSources")
+
+	var err error
+
+	for _, s := range s.sources {
+		err = s.Unsubscribe()
+	}
+
+	return err
+}
+
 func (s *service) listenSubscribes() {
+	s.logger.Debugm("ListenSubscribes")
+
 	for !s.isClosing {
 		cID, v, ok := reflect.Select(s.subscribes)
 		if !ok {
 			s.subscribes[cID].Chan = reflect.ValueOf(nil)
+		} else {
+			s.processChannelRecv(
+				s.subsProbeMap[cID],
+				v.Interface().(SourceData),
+			)
 		}
-		s.processChannelRecv(
-			s.subsProbeMap[cID],
-			v.Interface().(SourceData),
-		)
 	}
 }
 
 func (s *service) processChannelRecv(p Probe, sd SourceData) {
+	s.logger.Debugm("processChannelRecv", "probe", p)
 	s.datas[p] = sd
 }
 
 func (s *service) generateEndpoints() {
-	for k, v := range s.datas {
-		s.endpoints[k] = newEndpoint(v)
+	for p := range s.sources {
+		s.logger.Debugm("generateEndpoints", "probe", p)
+		s.endpoints[p] = s.newEndpoint(p)
 	}
 }
 
 func (s *service) runServer() error {
+	s.logger.Debugm("runServer")
+
 	handler := http.NewServeMux()
 
 	for p, e := range s.endpoints {
 		if uri, ok := probeEndpoint[p]; ok {
+			s.logger.Debugm("registeringEndpoint", "probe", p, "endpoint", uri)
+
 			handler.Handle(
 				uri,
 				httptransport.NewServer(e, decodeRequest, encodeResponse),
@@ -155,11 +189,17 @@ func (s *service) runServer() error {
 }
 
 func (s *service) stopServer() error {
+	s.logger.Debugm("stopServer")
 	return s.server.Close()
 }
 
-func newEndpoint(sd SourceData) endpoint.Endpoint {
+func (s *service) newEndpoint(p Probe) endpoint.Endpoint {
 	return func(_ context.Context, _ interface{}) (interface{}, error) {
+		sd, ok := s.datas[p]
+		if !ok {
+			return nil, errorNoSourceData
+		}
+
 		return sd.GetData(), sd.GetError()
 	}
 }
@@ -169,5 +209,6 @@ func decodeRequest(_ context.Context, _ *http.Request) (interface{}, error) {
 }
 
 func encodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
+	w.Header().Add("Content-Type", "application/json")
 	return json.NewEncoder(w).Encode(response)
 }

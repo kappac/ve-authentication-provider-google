@@ -24,12 +24,17 @@ type fetcherGetResult struct {
 	err  error
 }
 
+type fetcherUpdateCerts struct {
+	certs fetcherCertsMap
+	err   error
+}
+
 type fetcher struct {
 	logger       logger.Logger
 	closeCh      chan chan error
 	fetchGetCh   <-chan fetcherGetResult
 	processingCh chan fetcherProcessingResult
-	updatesCh    chan fetcherCertsMap
+	updatesCh    chan fetcherUpdateCerts
 	nextUpdate   time.Time
 	nextUpdateCh <-chan time.Time
 	isClosing    bool
@@ -42,7 +47,7 @@ func newFetcher() *fetcher {
 			logger.WithEntity("Fetcher"),
 		),
 		closeCh:   make(chan chan error),
-		updatesCh: make(chan fetcherCertsMap),
+		updatesCh: make(chan fetcherUpdateCerts),
 	}
 }
 
@@ -95,8 +100,16 @@ func (f *fetcher) run() {
 			if pr.err != nil {
 				f.err = pr.err
 				nt = fetcherGetTimeout
+
+				f.updatesCh <- fetcherUpdateCerts{
+					certs: nil,
+					err:   pr.err,
+				}
 			} else {
-				f.updatesCh <- pr.certs
+				f.updatesCh <- fetcherUpdateCerts{
+					certs: pr.certs,
+					err:   nil,
+				}
 
 				f.err = nil
 				nt = pr.maxAge
@@ -116,7 +129,7 @@ func (f *fetcher) stop() error {
 	return <-cc
 }
 
-func (f *fetcher) subscribe() chan fetcherCertsMap {
+func (f *fetcher) subscribe() chan fetcherUpdateCerts {
 	return f.updatesCh
 }
 
