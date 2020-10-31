@@ -15,16 +15,18 @@ func (p ServiceConfig) Verify() error {
 }
 
 const (
-	defaultName    = "ve-authentication-provider-google"
-	defaultAddress = ":8000"
+	defaultName          = "ve-authentication-provider-google"
+	defaultAddress       = ":8000"
+	defaultProbesAddress = ":8010"
 )
 
 var (
 	// Config is a set of service parameters.
 	Config ServiceConfig = ServiceConfig{
 		DefaultServiceParameters: veconfig.DefaultServiceParameters{
-			Name:    defaultName,
-			Address: defaultAddress,
+			Name:          defaultName,
+			Address:       defaultAddress,
+			ProbesAddress: defaultProbesAddress,
 		},
 	}
 )

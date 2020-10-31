@@ -1,11 +1,13 @@
 package launch
 
 import (
+	"errors"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/kappac/ve-authentication-provider-google/internal/logger"
+	"github.com/kappac/ve-authentication-provider-google/internal/types/runstopper"
 )
 
 var (
@@ -16,16 +18,17 @@ var (
 
 // Function defines an interface of code to be run in
 // a routine.
-type Function func(errCh chan<- error, exitCh chan bool)
+type Function func(errCh chan<- error, exitCh chan error)
 
 // Launch starts functions provided as the parameters and manages
 // sygnals to interrupt its.
 func Launch(fns ...Function) chan error {
 	log.Debugm("initializing")
 
-	var (
-		exitChs []chan bool
+	fnsAmount := len(fns)
 
+	var (
+		exitChs    = make([]chan error, fnsAmount)
 		resCh      = make(chan error)
 		funcErrCh  = make(chan error)
 		interuptCh = make(chan os.Signal)
@@ -39,10 +42,10 @@ func Launch(fns ...Function) chan error {
 
 	go interupt(interuptCh)
 
-	for _, fn := range fns {
-		exitCh := make(chan bool)
+	for i, fn := range fns {
+		exitCh := make(chan error)
 		go fn(funcErrCh, exitCh)
-		exitChs = append(exitChs, exitCh)
+		exitChs[i] = exitCh
 	}
 
 	go (func() {
@@ -57,8 +60,9 @@ func Launch(fns ...Function) chan error {
 			case <-stopCh:
 				log.Debugm("Stopping")
 				for _, exitCh := range exitChs {
-					exitCh <- true
-					<-exitCh
+					exitCh <- errors.New("Stop service")
+					err := <-exitCh
+					log.Infom("FunctionStopped", "err", err)
 				}
 
 				isClosing = true
@@ -69,6 +73,28 @@ func Launch(fns ...Function) chan error {
 	})()
 
 	return resCh
+}
+
+// WithRunStopper creates a function suitable for Launch to
+// deal with RunStopper.
+func WithRunStopper(rs runstopper.RunStopper) Function {
+	return func(errCh chan<- error, exitCh chan error) {
+		var (
+			isClosing bool
+		)
+
+		go (func() {
+			errCh <- rs.Run()
+		})()
+
+		for !isClosing {
+			select {
+			case <-exitCh:
+				isClosing = true
+				exitCh <- rs.Stop()
+			}
+		}
+	}
 }
 
 func interupt(interuptCh chan<- os.Signal) {

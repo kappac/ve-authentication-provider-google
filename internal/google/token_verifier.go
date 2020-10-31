@@ -57,8 +57,8 @@ func (tv *tokenVerifier) Run() {
 
 		tv.logger.Debugm("closing", "err", tv.err)
 
-		tv.closeChannels()
 		errc <- tv.err
+		tv.closeChannels()
 	}
 }
 

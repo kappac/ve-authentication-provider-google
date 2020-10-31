@@ -5,6 +5,7 @@ import (
 
 	"github.com/kappac/ve-authentication-provider-google/internal/logger"
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
+	"github.com/kappac/ve-authentication-provider-google/internal/statusservice"
 	"github.com/kappac/ve-authentication-provider-google/internal/types/runstopper"
 	"google.golang.org/grpc"
 )
@@ -12,6 +13,7 @@ import (
 // VEAuthenticationProviderGoogle manages service API.
 type VEAuthenticationProviderGoogle interface {
 	runstopper.RunStopper
+	GetStatisticsSource() statusservice.SourceSubscriber
 }
 
 type veAuthenticationProviderGoogle struct {
@@ -44,8 +46,8 @@ func New(os ...NewOption) VEAuthenticationProviderGoogle {
 func (p *veAuthenticationProviderGoogle) Run() error {
 	var errc = make(chan error)
 
-	go p.runBinding(errc)
 	go p.runGrpc(errc)
+	go p.runBinding(errc)
 
 	select {
 	case err := <-errc:
@@ -56,6 +58,10 @@ func (p *veAuthenticationProviderGoogle) Run() error {
 func (p *veAuthenticationProviderGoogle) Stop() error {
 	p.grpcserver.Stop()
 	return p.binding.Stop()
+}
+
+func (p *veAuthenticationProviderGoogle) GetStatisticsSource() statusservice.SourceSubscriber {
+	return p.binding.svc.GetStatisticsSource()
 }
 
 func (p *veAuthenticationProviderGoogle) runBinding(errc chan<- error) {

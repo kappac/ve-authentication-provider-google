@@ -9,8 +9,9 @@ type ServiceParameters interface {
 // DefaultServiceParameters represents parameters that are common for
 // all the VE services.
 type DefaultServiceParameters struct {
-	Name    string `json:"NAME,omitempty"`
-	Address string `json:"ADDRESS,omitempty"`
+	Name          string `json:"NAME,omitempty"`
+	Address       string `json:"ADDRESS,omitempty"`
+	ProbesAddress string `json:"PROBES_ADDRESS,omitempty"`
 }
 
 // Verify checks if all the default params are valid.
