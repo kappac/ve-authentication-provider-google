@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/google"
 	"github.com/kappac/ve-authentication-provider-google/internal/statusservice"
+	"github.com/kappac/ve-authentication-provider-google/internal/veservice"
 	veerror "github.com/kappac/ve-authentication-provider-google/pkg/proto/error"
 	"github.com/kappac/ve-authentication-provider-google/pkg/proto/providerinfo"
 	"github.com/kappac/ve-authentication-provider-google/pkg/proto/request"
@@ -10,7 +11,7 @@ import (
 )
 
 type authProviderGoogle interface {
-	statusservice.RunStopper
+	veservice.RunStopper
 	ValidateToken(req request.VEValidateTokenRequest) (response.VEValidateTokenResponse, error)
 	GetStatisticsSource() statusservice.SourceSubscriber
 }
