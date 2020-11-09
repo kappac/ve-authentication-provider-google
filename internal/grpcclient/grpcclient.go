@@ -10,6 +10,22 @@ const (
 	dialTimeout = 5 * time.Second
 )
 
+// Dialer provides an interface to Dial
+type Dialer interface {
+	Dial(addr string, opts ...grpc.DialOption) error
+}
+
+// Closer provides an interface to Close
+type Closer interface {
+	Close() error
+}
+
+// DialCloser combines Dialer and Closer
+type DialCloser interface {
+	Dialer
+	Closer
+}
+
 // GrpcClient is a wrapper for grpc.ClientConn
 type GrpcClient interface {
 	Dial(addr string, opts ...grpc.DialOption) error
