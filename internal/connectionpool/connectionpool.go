@@ -36,10 +36,10 @@ type connectionPool struct {
 	connections connections
 	pop         connectionPoper
 	push        connectionPusher
+	closing     closing
 	wg          sync.WaitGroup
 	once        sync.Once
 	logger      logger.Logger
-	closing     closing
 	err         error
 }
 
