@@ -15,13 +15,15 @@ import (
 	"google.golang.org/grpc"
 )
 
-func createConnection(addr string, log logger.Logger) client.VEAuthenticationProviderGoogleClient {
+func createConnection(addr string, log logger.Logger) (client.VEAuthenticationProviderGoogleClient, error) {
+	var err error
+
 	client := client.New()
-	if err := client.Dial(addr, grpc.WithInsecure()); err != nil {
+	if err = client.Dial(addr, grpc.WithInsecure()); err != nil {
 		_ = log.Errorm("DialingFail", "err", err)
-		os.Exit(1)
 	}
-	return client
+
+	return client, err
 }
 
 func main() {
@@ -39,10 +41,14 @@ func main() {
 	}
 
 	pool := connectionpool.New(
-		connectionpool.WithConstructor(func() grpcclient.Closer {
+		connectionpool.WithConstructor(func() (grpcclient.Closer, error) {
 			return createConnection(*addr, log)
 		}),
 	)
+	if err := pool.Run(); err != nil {
+		_ = log.Errorm("StartingPool", "err", err)
+		os.Exit(1)
+	}
 	defer pool.Stop()
 
 	con := pool.Pop().(client.VEAuthenticationProviderGoogleClient)
