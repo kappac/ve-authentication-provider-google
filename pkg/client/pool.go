@@ -24,15 +24,16 @@ func New(opts ...Option) VEAuthenticationProviderGoogleClient {
 		max:      5,
 		grpcOpts: make([]grpc.DialOption, 0),
 	}
+
+	for _, opt := range opts {
+		opt(p)
+	}
+
 	p.pool = connectionpool.New(
 		connectionpool.WithMin(p.min),
 		connectionpool.WithMax(p.max),
 		connectionpool.WithConstructor(p.createConnection),
 	)
-
-	for _, opt := range opts {
-		opt(p)
-	}
 
 	return p
 }
