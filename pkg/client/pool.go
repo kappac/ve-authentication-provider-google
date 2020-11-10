@@ -13,14 +13,22 @@ import (
 type veAuthenticationProviderPool struct {
 	pool     connectionpool.ConnectionPool
 	min, max int
+	addr     string
+	grpcOpts []grpc.DialOption
 }
 
 // New instantiates new Client
 func New(opts ...Option) VEAuthenticationProviderGoogleClient {
 	p := &veAuthenticationProviderPool{
-		min: 2,
-		max: 5,
+		min:      2,
+		max:      5,
+		grpcOpts: make([]grpc.DialOption, 0),
 	}
+	p.pool = connectionpool.New(
+		connectionpool.WithMin(p.min),
+		connectionpool.WithMax(p.max),
+		connectionpool.WithConstructor(p.createConnection),
+	)
 
 	for _, opt := range opts {
 		opt(p)
@@ -29,14 +37,7 @@ func New(opts ...Option) VEAuthenticationProviderGoogleClient {
 	return p
 }
 
-func (p *veAuthenticationProviderPool) Dial(addr string, opts ...grpc.DialOption) error {
-	p.pool = connectionpool.New(
-		connectionpool.WithMin(p.min),
-		connectionpool.WithMax(p.max),
-		connectionpool.WithConstructor(func() (grpcclient.Closer, error) {
-			return createConnection(addr, opts)
-		}),
-	)
+func (p *veAuthenticationProviderPool) Dial() error {
 	return p.pool.Run()
 }
 
@@ -50,11 +51,11 @@ func (p *veAuthenticationProviderPool) ValidateToken(c context.Context, r reques
 	return con.ValidateToken(c, r)
 }
 
-func createConnection(addr string, opts []grpc.DialOption) (VEAuthenticationProviderGoogleClient, error) {
+func (p *veAuthenticationProviderPool) createConnection() (grpcclient.Closer, error) {
 	var err error
 
-	client := newClient()
-	if err = client.Dial(addr, opts...); err != nil {
+	client := newClient(p.addr, p.grpcOpts)
+	if err = client.Dial(); err != nil {
 		return nil, err
 	}
 

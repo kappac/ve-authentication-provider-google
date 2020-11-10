@@ -27,17 +27,22 @@ func main() {
 		os.Exit(1)
 	}
 
-	client := client.New()
-	if err := client.Dial(*addr, grpc.WithInsecure()); err != nil {
+	cl := client.New(
+		client.WithAddress(*addr),
+		client.WithGRPCDialOptions(
+			grpc.WithInsecure(),
+		),
+	)
+	if err := cl.Dial(); err != nil {
 		_ = log.Errorm("DialingFail", "err", err)
 		os.Exit(1)
 	}
-	defer client.Close()
+	defer cl.Close()
 
 	begin := time.Now()
 	ctx := context.New("", "", "")
 	req := request.New(request.WithToken(*token))
-	info, err := client.ValidateToken(ctx, req)
+	info, err := cl.ValidateToken(ctx, req)
 
 	fmt.Printf("Info: %v\n", info)
 	_ = log.Infom("ValidateToken", "err", err, "took", time.Since(begin))

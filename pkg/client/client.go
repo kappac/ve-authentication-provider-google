@@ -19,24 +19,28 @@ const (
 // VEAuthenticationProviderGoogleClient is a client interface
 // for VEAuthenticationProviderGoogle service
 type VEAuthenticationProviderGoogleClient interface {
-	Dial(addr string, opts ...grpc.DialOption) error
+	Dial() error
 	Close() error
 	ValidateToken(c context.Context, r request.VEValidateTokenRequest) (providerinfo.VEProviderInfo, error)
 }
 
 type veAuthenticationProviderGoogleClient struct {
-	gc      grpcclient.GrpcClient
-	service pb.VEAuthProviderGoogleServiceClient
+	gc       grpcclient.GrpcClient
+	service  pb.VEAuthProviderGoogleServiceClient
+	addr     string
+	grpcOpts []grpc.DialOption
 }
 
-func newClient() VEAuthenticationProviderGoogleClient {
+func newClient(addr string, opts []grpc.DialOption) VEAuthenticationProviderGoogleClient {
 	return &veAuthenticationProviderGoogleClient{
-		gc: grpcclient.New(),
+		gc:       grpcclient.New(),
+		grpcOpts: opts,
+		addr:     addr,
 	}
 }
 
-func (c *veAuthenticationProviderGoogleClient) Dial(addr string, opts ...grpc.DialOption) error {
-	if err := c.gc.Dial(addr, opts...); err != nil {
+func (c *veAuthenticationProviderGoogleClient) Dial() error {
+	if err := c.gc.Dial(c.addr, c.grpcOpts...); err != nil {
 		return err
 	}
 	c.service = pb.NewVEAuthProviderGoogleServiceClient(c.gc.GetClientConn())
