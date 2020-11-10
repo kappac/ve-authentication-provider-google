@@ -29,8 +29,7 @@ type veAuthenticationProviderGoogleClient struct {
 	service pb.VEAuthProviderGoogleServiceClient
 }
 
-// New constructs new VEAuthenticationProviderGoogleClient instance
-func New() VEAuthenticationProviderGoogleClient {
+func newClient() VEAuthenticationProviderGoogleClient {
 	return &veAuthenticationProviderGoogleClient{
 		gc: grpcclient.New(),
 	}
