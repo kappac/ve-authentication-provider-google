@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/kappac/ve-authentication-provider-google/internal/logger"
@@ -20,6 +21,8 @@ var (
 // a routine.
 type Function func(errCh chan<- error, exitCh chan error)
 
+type closing chan interface{}
+
 // Launch starts functions provided as the parameters and manages
 // sygnals to interrupt its.
 func Launch(fns ...Function) chan error {
@@ -28,16 +31,18 @@ func Launch(fns ...Function) chan error {
 	fnsAmount := len(fns)
 
 	var (
+		once       = sync.Once{}
 		exitChs    = make([]chan error, fnsAmount)
 		resCh      = make(chan error)
 		funcErrCh  = make(chan error)
 		interuptCh = make(chan os.Signal)
-		stopCh     = make(chan bool)
+		closing    = make(closing)
 		stop       = func() {
-			stopCh <- true
+			once.Do(func() {
+				close(closing)
+			})
 		}
-		isClosing bool
-		err       error
+		err error
 	)
 
 	go interupt(interuptCh)
@@ -49,25 +54,25 @@ func Launch(fns ...Function) chan error {
 	}
 
 	go (func() {
-		for !isClosing {
+		for {
 			select {
 			case err = <-funcErrCh:
 				log.Debugm("FunctionError", "err", err)
-				go stop()
+				stop()
 			case <-interuptCh:
 				log.Debugm("Interupting")
-				go stop()
-			case <-stopCh:
+				stop()
+			case <-closing:
 				log.Debugm("Stopping")
+
 				for _, exitCh := range exitChs {
 					exitCh <- errors.New("Stop service")
-					err := <-exitCh
+					err = <-exitCh
 					log.Infom("FunctionStopped", "err", err)
 				}
 
-				isClosing = true
-
 				resCh <- err
+				return
 			}
 		}
 	})()
@@ -79,19 +84,15 @@ func Launch(fns ...Function) chan error {
 // deal with RunStopper.
 func WithRunStopper(rs veservice.RunStopper) Function {
 	return func(errCh chan<- error, exitCh chan error) {
-		var (
-			isClosing bool
-		)
-
 		go (func() {
 			errCh <- rs.Run()
 		})()
 
-		for !isClosing {
+		for {
 			select {
 			case <-exitCh:
-				isClosing = true
 				exitCh <- rs.Stop()
+				return
 			}
 		}
 	}

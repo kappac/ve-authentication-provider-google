@@ -13,12 +13,13 @@ const (
 )
 
 // ConnectionConstructor creates new instance of a connection.
-type ConnectionConstructor func() grpcclient.Closer
+type ConnectionConstructor func() (grpcclient.Closer, error)
 
 // ConnectionPool provides an interface to manage connections.
 type ConnectionPool interface {
 	Push(grpcclient.Closer)
 	Pop() grpcclient.Closer
+	Run() error
 	Stop() error
 }
 
@@ -31,14 +32,14 @@ type connectionPusher chan grpcclient.Closer
 type closing chan interface{}
 
 type connectionPool struct {
+	wg          sync.WaitGroup
+	once        sync.Once
 	min, max    int
 	constructor ConnectionConstructor
 	connections connections
 	pop         connectionPoper
 	push        connectionPusher
 	closing     closing
-	wg          sync.WaitGroup
-	once        sync.Once
 	logger      logger.Logger
 	err         error
 }
@@ -60,19 +61,11 @@ func New(opts ...PoolOption) ConnectionPool {
 		closing: cl,
 	}
 
-	p.wg.Add(1)
-
 	for _, opt := range opts {
 		opt(p)
 	}
 
 	p.connections = make(connections, 0)
-
-	go p.listen()
-	p.validateOpts()
-	p.initConnections()
-
-	l.Infom("Started", "min", p.min, "max", p.max)
 
 	return p
 }
@@ -85,6 +78,22 @@ func (p *connectionPool) Pop() grpcclient.Closer {
 func (p *connectionPool) Push(c grpcclient.Closer) {
 	p.logger.Debugm("Pushing")
 	p.push <- c
+}
+
+func (p *connectionPool) Run() error {
+	p.wg.Add(1)
+
+	go p.listen()
+	p.validateOpts()
+
+	if err := p.initConnections(); err != nil {
+		p.stop()
+		return err
+	}
+
+	p.logger.Infom("Running", "min", p.min, "max", p.max)
+
+	return nil
 }
 
 func (p *connectionPool) Stop() error {
@@ -108,12 +117,20 @@ func (p *connectionPool) validateOpts() {
 	}
 }
 
-func (p *connectionPool) initConnections() {
-	if p.constructor != nil {
-		for i := 0; i < p.min; i++ {
-			p.initConnection()
+func (p *connectionPool) initConnections() error {
+	var err error
+
+	if p.constructor == nil {
+		return errorNoNoConstructor
+	}
+
+	for i := 0; i < p.min; i++ {
+		if err = p.initConnection(); err != nil {
+			return err
 		}
 	}
+
+	return nil
 }
 
 func (p *connectionPool) closeConnections() {
@@ -130,10 +147,15 @@ func (p *connectionPool) checkConnections() {
 	}
 }
 
-func (p *connectionPool) initConnection() {
-	c := p.constructor()
-	p.logger.Debugm("initConnection")
-	p.push <- c
+func (p *connectionPool) initConnection() error {
+	c, err := p.constructor()
+	p.logger.Debugm("initConnection", "err", err)
+
+	if err == nil {
+		p.push <- c
+	}
+
+	return err
 }
 
 func (p *connectionPool) listen() {

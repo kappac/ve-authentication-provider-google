@@ -1,6 +1,10 @@
 package google
 
-import "github.com/kappac/ve-authentication-provider-google/internal/statusservice"
+import (
+	"sync"
+
+	"github.com/kappac/ve-authentication-provider-google/internal/statusservice"
+)
 
 // StatisticsSourceData is suitable for StatusService processing
 type StatisticsSourceData struct {
@@ -23,17 +27,22 @@ type StatisticsSource interface {
 	statusservice.SourceSubscriber
 }
 
+type closing chan interface{}
+
 type statisticsSource struct {
+	wg             sync.WaitGroup
+	once           sync.Once
 	oauthSubscribe <-chan oauthCertificatesStatisticsUpdate
 	updatec        chan statusservice.SourceData
-	isClosing      bool
+	closing        closing
 }
 
 // NewStatisticsSource constructs new StatisticsSource instance
 // to be used with StatusService
 func NewStatisticsSource(opts ...StatisticsSourceOption) StatisticsSource {
 	s := &statisticsSource{
-		updatec: make(chan statusservice.SourceData, 1),
+		updatec: make(chan statusservice.SourceData),
+		closing: make(closing),
 	}
 
 	for _, opt := range opts {
@@ -50,18 +59,26 @@ func (s *statisticsSource) Subscribe() <-chan statusservice.SourceData {
 }
 
 func (s *statisticsSource) Unsubscribe() error {
-	s.isClosing = true
-	close(s.updatec)
+	s.once.Do(func() {
+		close(s.closing)
+	})
+	s.wg.Wait()
 	return nil
 }
 
 func (s *statisticsSource) start() {
-	for !s.isClosing {
+	s.wg.Add(1)
+	defer s.wg.Done()
+
+	for {
 		select {
 		case stats, ok := <-s.oauthSubscribe:
 			if ok {
 				s.updatec <- s.constructSourceData(stats)
 			}
+		case <-s.closing:
+			close(s.updatec)
+			return
 		}
 	}
 }
