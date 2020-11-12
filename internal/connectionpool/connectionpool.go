@@ -32,14 +32,14 @@ type connectionPusher chan grpcclient.Closer
 type closing chan interface{}
 
 type connectionPool struct {
+	wg          sync.WaitGroup
+	once        sync.Once
 	min, max    int
 	constructor ConnectionConstructor
 	connections connections
 	pop         connectionPoper
 	push        connectionPusher
 	closing     closing
-	wg          sync.WaitGroup
-	once        sync.Once
 	logger      logger.Logger
 	err         error
 }

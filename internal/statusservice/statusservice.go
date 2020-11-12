@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"reflect"
+	"sync"
 
 	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -54,16 +55,33 @@ type StatusService interface {
 	veservice.RunStopper
 }
 
+type closing chan interface{}
+
+type sources map[Probe]SourceSubscriber
+
+type subscribes []reflect.SelectCase
+
+type probeMap map[int]Probe
+
+type probeData map[Probe]SourceData
+
+type probeEndpoints map[Probe]endpoint.Endpoint
+
 type statusService struct {
+	wg           sync.WaitGroup
+	once         sync.Once
+	runOnce      sync.Once
 	logger       logger.Logger
 	address      string
 	server       *http.Server
-	sources      map[Probe]SourceSubscriber
-	subscribes   []reflect.SelectCase
-	subsProbeMap map[int]Probe
-	datas        map[Probe]SourceData
-	endpoints    map[Probe]endpoint.Endpoint
-	isClosing    bool
+	sources      sources
+	subscribes   subscribes
+	subsProbeMap probeMap
+	datas        probeData
+	datasMX      sync.Mutex
+	endpoints    probeEndpoints
+	closing      closing
+	err          error
 }
 
 // New constructs new instance of a Service
@@ -72,7 +90,7 @@ func New(opts ...NewOption) StatusService {
 		logger: logger.New(
 			logger.WithEntity("StatusService"),
 		),
-		sources: make(map[Probe]SourceSubscriber),
+		sources: make(sources),
 	}
 
 	for _, o := range opts {
@@ -84,10 +102,13 @@ func New(opts ...NewOption) StatusService {
 	}
 
 	sourcesAmount := len(s.sources)
-	s.subscribes = make([]reflect.SelectCase, sourcesAmount)
-	s.subsProbeMap = make(map[int]Probe, sourcesAmount)
-	s.datas = make(map[Probe]SourceData, sourcesAmount)
-	s.endpoints = make(map[Probe]endpoint.Endpoint, sourcesAmount)
+	// the last subscribe is closing chan.
+	subscribesAmount := sourcesAmount + 1
+	s.closing = make(closing)
+	s.subscribes = make(subscribes, subscribesAmount)
+	s.subsProbeMap = make(probeMap, sourcesAmount)
+	s.datas = make(probeData, sourcesAmount)
+	s.endpoints = make(probeEndpoints, sourcesAmount)
 
 	s.subscribeSources()
 	s.generateEndpoints()
@@ -109,13 +130,23 @@ func (s *statusService) Run() error {
 func (s *statusService) Stop() error {
 	s.logger.Debugm("Stop")
 
-	s.isClosing = true
+	s.once.Do(func() {
+		close(s.closing)
+	})
+	s.wg.Wait()
+
+	return s.err
+}
+
+func (s *statusService) stop() {
 	s.unsubscribeSources()
-	return s.stopServer()
+	s.stopServer()
 }
 
 func (s *statusService) subscribeSources() {
 	s.logger.Debugm("subscribeSource")
+
+	s.wg.Add(1)
 
 	for k, v := range s.sources {
 		nextCaseIndex := len(s.subsProbeMap)
@@ -125,25 +156,46 @@ func (s *statusService) subscribeSources() {
 		}
 		s.subsProbeMap[nextCaseIndex] = k
 	}
+
+	cidx := len(s.subscribes) - 1
+
+	s.subscribes[cidx] = reflect.SelectCase{
+		Dir:  reflect.SelectRecv,
+		Chan: reflect.ValueOf(s.closing),
+	}
 }
 
-func (s *statusService) unsubscribeSources() error {
+func (s *statusService) unsubscribeSources() {
 	s.logger.Debugm("unsubscribeSources")
 
-	var err error
+	defer s.wg.Done()
 
-	for _, s := range s.sources {
-		err = s.Unsubscribe()
+	for _, src := range s.sources {
+		s.err = src.Unsubscribe()
 	}
 
-	return err
+	sc := len(s.subscribes)
+
+	for idx, sbs := range s.subscribes {
+		if idx < sc {
+			sbs.Chan = reflect.ValueOf(nil)
+		}
+	}
 }
 
 func (s *statusService) listenSubscribes() {
 	s.logger.Debugm("ListenSubscribes")
 
-	for !s.isClosing {
+	// the index of the closing channel
+	cidx := len(s.subscribes) - 1
+
+	for {
 		cID, v, ok := reflect.Select(s.subscribes)
+		if cID == cidx {
+			s.stop()
+			return
+		}
+
 		if !ok {
 			s.subscribes[cID].Chan = reflect.ValueOf(nil)
 		} else {
@@ -156,6 +208,8 @@ func (s *statusService) listenSubscribes() {
 }
 
 func (s *statusService) processChannelRecv(p Probe, sd SourceData) {
+	s.datasMX.Lock()
+	defer s.datasMX.Unlock()
 	s.logger.Debugm("processChannelRecv", "probe", p)
 	s.datas[p] = sd
 }
@@ -185,16 +239,21 @@ func (s *statusService) runServer() error {
 
 	s.server.Handler = handler
 
+	s.wg.Add(1)
+
 	return s.server.ListenAndServe()
 }
 
-func (s *statusService) stopServer() error {
+func (s *statusService) stopServer() {
 	s.logger.Debugm("stopServer")
-	return s.server.Close()
+	s.err = s.server.Close()
+	s.wg.Done()
 }
 
 func (s *statusService) newEndpoint(p Probe) endpoint.Endpoint {
 	return func(_ context.Context, _ interface{}) (interface{}, error) {
+		s.datasMX.Lock()
+		defer s.datasMX.Unlock()
 		sd, ok := s.datas[p]
 		if !ok {
 			return nil, errorNoSourceData

@@ -2,6 +2,7 @@ package service
 
 import (
 	"net"
+	"sync"
 
 	"github.com/kappac/ve-authentication-provider-google/internal/logger"
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
@@ -19,6 +20,7 @@ type VEAuthenticationProviderGoogle interface {
 type veAuthenticationProviderGoogle struct {
 	address    string
 	binding    grpcBinding
+	grpcMX     sync.Mutex
 	grpcserver *grpc.Server
 	logger     logger.Logger
 }
@@ -56,6 +58,8 @@ func (p *veAuthenticationProviderGoogle) Run() error {
 }
 
 func (p *veAuthenticationProviderGoogle) Stop() error {
+	p.grpcMX.Lock()
+	defer p.grpcMX.Unlock()
 	p.grpcserver.Stop()
 	return p.binding.Stop()
 }
@@ -75,7 +79,9 @@ func (p *veAuthenticationProviderGoogle) runGrpc(errc chan<- error) {
 		return
 	}
 
+	p.grpcMX.Lock()
 	p.grpcserver = grpc.NewServer()
+	p.grpcMX.Unlock()
 
 	pb.RegisterVEAuthProviderGoogleServiceServer(p.grpcserver, p.binding)
 
