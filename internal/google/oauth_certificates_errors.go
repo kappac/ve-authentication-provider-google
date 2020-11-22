@@ -1,7 +1,7 @@
 package google
 
 import (
-	veerror "github.com/kappac/ve-authentication-provider-google/pkg/proto/error"
+	veerror "github.com/kappac/ve-back-end-utils/pkg/error"
 )
 
 const (
@@ -13,6 +13,6 @@ const (
 var (
 	errorNoCertificate = veerror.New(
 		veerror.WithCode(errorCodeNoCertificate),
-		veerror.WithDescription("A certificate is absent"),
+		veerror.WithMessage("A certificate is absent"),
 	)
 )

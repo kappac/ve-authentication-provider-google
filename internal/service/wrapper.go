@@ -4,10 +4,10 @@ import (
 	"net"
 	"sync"
 
-	"github.com/kappac/ve-authentication-provider-google/internal/logger"
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
-	"github.com/kappac/ve-authentication-provider-google/internal/statusservice"
-	"github.com/kappac/ve-authentication-provider-google/internal/veservice"
+	"github.com/kappac/ve-back-end-utils/pkg/logger"
+	veservice "github.com/kappac/ve-back-end-utils/pkg/service"
+	"github.com/kappac/ve-back-end-utils/pkg/statusservice"
 	"google.golang.org/grpc"
 )
 
@@ -83,7 +83,7 @@ func (p *veAuthenticationProviderGoogle) runGrpc(errc chan<- error) {
 	p.grpcserver = grpc.NewServer()
 	p.grpcMX.Unlock()
 
-	pb.RegisterVEAuthProviderGoogleServiceServer(p.grpcserver, p.binding)
+	pb.RegisterVEServiceServer(p.grpcserver, p.binding)
 
 	errc <- p.grpcserver.Serve(ln)
 }

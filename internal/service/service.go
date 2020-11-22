@@ -2,12 +2,12 @@ package service
 
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/google"
-	"github.com/kappac/ve-authentication-provider-google/internal/statusservice"
-	"github.com/kappac/ve-authentication-provider-google/internal/veservice"
-	veerror "github.com/kappac/ve-authentication-provider-google/pkg/proto/error"
 	"github.com/kappac/ve-authentication-provider-google/pkg/proto/providerinfo"
 	"github.com/kappac/ve-authentication-provider-google/pkg/proto/request"
 	"github.com/kappac/ve-authentication-provider-google/pkg/proto/response"
+	veerror "github.com/kappac/ve-back-end-utils/pkg/error"
+	veservice "github.com/kappac/ve-back-end-utils/pkg/service"
+	"github.com/kappac/ve-back-end-utils/pkg/statusservice"
 )
 
 type authProviderGoogle interface {
@@ -31,7 +31,7 @@ func newAuthProviderGoogle() authProviderGoogle {
 func (p *authProviderGoogleImpl) ValidateToken(req request.VEValidateTokenRequest) (response.VEValidateTokenResponse, error) {
 	var (
 		veinfo providerinfo.VEProviderInfo
-		veerr  veerror.VEError
+		veerr  veerror.Error
 	)
 
 	if t, err := p.tv.Verify(req.GetToken()); err == nil {
@@ -43,12 +43,12 @@ func (p *authProviderGoogleImpl) ValidateToken(req request.VEValidateTokenReques
 			providerinfo.WithPicture(t.Picture),
 		)
 	} else {
-		if e, ok := err.(veerror.VEError); ok {
+		if e, ok := err.(veerror.Error); ok {
 			veerr = e
 		}
 
 		veerr = veerror.New(
-			veerror.WithDescription(err.Error()),
+			veerror.WithMessage(err.Error()),
 		)
 	}
 

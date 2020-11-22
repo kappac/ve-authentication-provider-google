@@ -3,7 +3,7 @@ package google
 import (
 	"sync"
 
-	"github.com/kappac/ve-authentication-provider-google/internal/statusservice"
+	"github.com/kappac/ve-back-end-utils/pkg/statusservice"
 )
 
 // StatisticsSourceData is suitable for StatusService processing

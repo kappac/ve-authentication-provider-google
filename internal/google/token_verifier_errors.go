@@ -1,7 +1,7 @@
 package google
 
 import (
-	veerror "github.com/kappac/ve-authentication-provider-google/pkg/proto/error"
+	veerror "github.com/kappac/ve-back-end-utils/pkg/error"
 )
 
 const (
@@ -13,6 +13,6 @@ const (
 var (
 	errorNoCertificateKeyID = veerror.New(
 		veerror.WithCode(errorCodeNoCertificateKeyID),
-		veerror.WithDescription("Certificate key id has not been found"),
+		veerror.WithMessage("Certificate key id has not been found"),
 	)
 )

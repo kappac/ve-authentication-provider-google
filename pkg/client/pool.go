@@ -3,10 +3,10 @@ package client
 import (
 	"context"
 
-	"github.com/kappac/ve-authentication-provider-google/internal/connectionpool"
-	"github.com/kappac/ve-authentication-provider-google/internal/grpcclient"
 	"github.com/kappac/ve-authentication-provider-google/pkg/proto/providerinfo"
 	"github.com/kappac/ve-authentication-provider-google/pkg/proto/request"
+	"github.com/kappac/ve-back-end-utils/pkg/connectionpool"
+	"github.com/kappac/ve-back-end-utils/pkg/service"
 	"google.golang.org/grpc"
 )
 
@@ -47,12 +47,13 @@ func (p *veAuthenticationProviderPool) Close() error {
 }
 
 func (p *veAuthenticationProviderPool) ValidateToken(c context.Context, r request.VEValidateTokenRequest) (providerinfo.VEProviderInfo, error) {
-	con := p.pool.Pop().(VEAuthenticationProviderGoogleClient)
-	defer p.pool.Push(con)
-	return con.ValidateToken(c, r)
+	con, _ := p.pool.Get(context.Background())
+	defer p.pool.Put(con)
+	coni := con.(VEAuthenticationProviderGoogleClient)
+	return coni.ValidateToken(c, r)
 }
 
-func (p *veAuthenticationProviderPool) createConnection() (grpcclient.Closer, error) {
+func (p *veAuthenticationProviderPool) createConnection() (service.Closer, error) {
 	var err error
 
 	client := newClient(p.addr, p.grpcOpts)

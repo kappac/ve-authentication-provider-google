@@ -2,7 +2,9 @@ syntax = "proto3";
 
 package pb;
 
-service VEAuthProviderGoogleService {
+import "github.com/kappac/ve-back-end-utils/pkg/proto/error/generated.proto";
+
+service VEService {
   rpc ValidateToken(VEValidateTokenRequest) returns (VEValidateTokenResponse);
 }
 
@@ -13,12 +15,7 @@ message VEValidateTokenRequest {
 message VEValidateTokenResponse {
   VEProviderInfo info  = 1;
   VEValidateTokenRequest request = 2;
-  VEError error = 3;
-}
-
-message VEError {
-  int32 code = 1;
-  string description = 2;
+  error.VEError error = 3;
 }
 
 message VEProviderInfo {

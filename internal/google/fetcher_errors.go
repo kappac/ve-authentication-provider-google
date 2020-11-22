@@ -3,7 +3,7 @@ package google
 import (
 	"fmt"
 
-	veerror "github.com/kappac/ve-authentication-provider-google/pkg/proto/error"
+	veerror "github.com/kappac/ve-back-end-utils/pkg/error"
 )
 
 const (
@@ -19,30 +19,30 @@ const (
 var (
 	errorCacheControlAbsent = veerror.New(
 		veerror.WithCode(errorCodeCacheControlHeaderAbsent),
-		veerror.WithDescription(
+		veerror.WithMessage(
 			fmt.Sprintf("\"%s\" is absent in the response header", fetcherCacheControlHeaderKey),
 		),
 	)
 	errorMaxAgePropertyAbsent = veerror.New(
 		veerror.WithCode(errorCodeMaxAgePropertyAbsent),
-		veerror.WithDescription(
+		veerror.WithMessage(
 			fmt.Sprintf("\"%s\" is absent in the response header", fetcherMaxAgeProperty),
 		),
 	)
 	errorMaxAgeValueAbsent = veerror.New(
 		veerror.WithCode(errorCodeMaxAgeValueAbsent),
-		veerror.WithDescription(
+		veerror.WithMessage(
 			fmt.Sprintf("Value for \"%s\" is absent", fetcherMaxAgeProperty),
 		),
 	)
 	errorMaxAgeConvertion = veerror.New(
 		veerror.WithCode(errorCodeMaxAgeConvertion),
-		veerror.WithDescription(
+		veerror.WithMessage(
 			fmt.Sprintf("Error during \"%s\" convertion", fetcherMaxAgeProperty),
 		),
 	)
 	errorJSONDecode = veerror.New(
 		veerror.WithCode(errorCodeJSONDecode),
-		veerror.WithDescription("Error during response decoding"),
+		veerror.WithMessage("Error during response decoding"),
 	)
 )

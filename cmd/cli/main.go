@@ -1,15 +1,16 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
 	"time"
 
-	"github.com/kappac/ve-authentication-provider-google/internal/logger"
 	"github.com/kappac/ve-authentication-provider-google/pkg/client"
-	"github.com/kappac/ve-authentication-provider-google/pkg/proto/context"
 	"github.com/kappac/ve-authentication-provider-google/pkg/proto/request"
+	"github.com/kappac/ve-back-end-utils/pkg/logger"
+	vecontext "github.com/kappac/ve-back-end-utils/pkg/proto/context"
 	"google.golang.org/grpc"
 )
 
@@ -40,7 +41,7 @@ func main() {
 	defer cl.Close()
 
 	begin := time.Now()
-	ctx := context.New("", "", "")
+	ctx := vecontext.New(context.Background(), "", "", "")
 	req := request.New(request.WithToken(*token))
 	info, err := cl.ValidateToken(ctx, req)
 

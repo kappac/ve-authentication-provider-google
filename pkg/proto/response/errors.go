@@ -2,7 +2,7 @@ package response
 
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/constants"
-	veerror "github.com/kappac/ve-authentication-provider-google/pkg/proto/error"
+	veerror "github.com/kappac/ve-back-end-utils/pkg/error"
 )
 
 const (
@@ -16,18 +16,18 @@ const (
 var (
 	errorMarshaling = veerror.New(
 		veerror.WithCode(errorCodeMarshalling),
-		veerror.WithDescription("An error during parsing fields"),
+		veerror.WithMessage("An error during parsing fields"),
 	)
 	errorUnmarshalWrongType = veerror.New(
 		veerror.WithCode(errorCodeUnmarshalWrongType),
-		veerror.WithDescription("A package provided for Unmarshal is of a wrong type"),
+		veerror.WithMessage("A package provided for Unmarshal is of a wrong type"),
 	)
 	errorVerifyRequestAbsent = veerror.New(
 		veerror.WithCode(errorCodeVerifyRequestAbsent),
-		veerror.WithDescription("Request is absent"),
+		veerror.WithMessage("Request is absent"),
 	)
 	errorVerifyInfoErrorAbsent = veerror.New(
 		veerror.WithCode(errorCodeVerifyInfoErrorAbsent),
-		veerror.WithDescription("Info or Error is absent"),
+		veerror.WithMessage("Info or Error is absent"),
 	)
 )
