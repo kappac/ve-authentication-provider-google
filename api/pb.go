@@ -1,3 +1,3 @@
 package pb
 
-//go:generate protoc --proto_path=../vendor:$HOME/Projects/RestX:. --go_out=plugins=grpc:../internal/pb pb.proto
+//go:generate protoc --proto_path=../vendor --proto_path=. --go_out=plugins=grpc:../internal/pb service.proto

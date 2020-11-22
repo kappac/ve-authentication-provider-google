@@ -4,8 +4,9 @@ import (
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
 	"github.com/kappac/ve-authentication-provider-google/pkg/proto/providerinfo"
 	"github.com/kappac/ve-authentication-provider-google/pkg/proto/request"
+	veerror "github.com/kappac/ve-back-end-utils/pkg/error"
 	"github.com/kappac/ve-back-end-utils/pkg/proto"
-	veerror "github.com/kappac/ve-back-end-utils/pkg/proto/error"
+	veprotoerror "github.com/kappac/ve-back-end-utils/pkg/proto/error"
 )
 
 // VEValidateTokenResponse is a wrapper for proto response.
@@ -14,13 +15,13 @@ type VEValidateTokenResponse interface {
 
 	GetInfo() providerinfo.VEProviderInfo
 	GetRequest() request.VEValidateTokenRequest
-	GetError() veerror.VEError
+	GetError() veerror.Error
 }
 
 type veValidateTokenResponse struct {
 	Info    providerinfo.VEProviderInfo    `json:"info,omitempty"`
 	Request request.VEValidateTokenRequest `json:"request"`
-	Error   veerror.VEError                `json:"error,omitempty"`
+	Error   veerror.Error                  `json:"error,omitempty"`
 }
 
 // New constructs VEValidateTokenResponse instance
@@ -42,7 +43,7 @@ func (tr *veValidateTokenResponse) GetRequest() request.VEValidateTokenRequest {
 	return tr.Request
 }
 
-func (tr *veValidateTokenResponse) GetError() veerror.VEError {
+func (tr *veValidateTokenResponse) GetError() veerror.Error {
 	return tr.Error
 }
 
@@ -50,7 +51,7 @@ func (tr *veValidateTokenResponse) Marshal() (interface{}, error) {
 	var (
 		reqpb                   *pb.VEValidateTokenRequest
 		infopb                  *pb.VEProviderInfo
-		errpb                   *pb.VEError
+		errpb                   *veprotoerror.VEError
 		reqErr, infoErr, errErr error
 	)
 
@@ -71,11 +72,7 @@ func (tr *veValidateTokenResponse) Marshal() (interface{}, error) {
 	}
 
 	if err := tr.GetError(); err != nil {
-		err, errErr := err.Marshal()
-
-		if errErr == nil {
-			errpb = err.(*pb.VEError)
-		}
+		errpb = err.ToProtoError()
 	}
 
 	if reqErr != nil && infoErr != nil && errErr != nil {
@@ -95,7 +92,6 @@ func (tr *veValidateTokenResponse) Unmarshal(p interface{}) error {
 	var (
 		veinfo = providerinfo.New()
 		vereq  = request.New()
-		veerr  = veerror.New()
 	)
 
 	pbResponse, ok := p.(*pb.VEValidateTokenResponse)
@@ -115,11 +111,9 @@ func (tr *veValidateTokenResponse) Unmarshal(p interface{}) error {
 		return err
 	}
 
-	if err := veerr.Unmarshal(pbResponse.GetError()); err == nil {
-		tr.Error = veerr
-	} else {
-		return err
-	}
+	tr.Error = veerror.New(
+		veerror.WithProtoError(pbResponse.GetError()),
+	)
 
 	return nil
 }

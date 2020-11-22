@@ -3,7 +3,7 @@ package response
 import (
 	"github.com/kappac/ve-authentication-provider-google/pkg/proto/providerinfo"
 	"github.com/kappac/ve-authentication-provider-google/pkg/proto/request"
-	"github.com/kappac/ve-back-end-utils/pkg/proto/error"
+	veerror "github.com/kappac/ve-back-end-utils/pkg/error"
 )
 
 // OptionUpdater updates veValidateTokenResponse properties.
@@ -24,7 +24,7 @@ func WithRequest(r request.VEValidateTokenRequest) OptionUpdater {
 }
 
 // WithError updates Error field of veValidateTokenResponse
-func WithError(e error.VEError) OptionUpdater {
+func WithError(e veerror.Error) OptionUpdater {
 	return func(tr *veValidateTokenResponse) {
 		tr.Error = e
 	}
