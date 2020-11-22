@@ -2,7 +2,7 @@ package providerinfo
 
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
-	"github.com/kappac/ve-authentication-provider-google/pkg/proto"
+	"github.com/kappac/ve-back-end-utils/pkg/proto"
 )
 
 // VEProviderInfo contains an information about user,

@@ -2,7 +2,7 @@ package request
 
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
-	"github.com/kappac/ve-authentication-provider-google/pkg/proto"
+	"github.com/kappac/ve-back-end-utils/pkg/proto"
 )
 
 // VEValidateTokenRequest is a wrapper for proto request.

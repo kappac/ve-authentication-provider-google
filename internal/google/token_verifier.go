@@ -2,7 +2,7 @@ package google
 
 import (
 	"github.com/dgrijalva/jwt-go"
-	"github.com/kappac/ve-authentication-provider-google/internal/logger"
+	"github.com/kappac/ve-back-end-utils/pkg/logger"
 )
 
 // TokenVerifier is JWT token verification

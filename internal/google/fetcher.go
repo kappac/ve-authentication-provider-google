@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kappac/ve-authentication-provider-google/internal/logger"
+	"github.com/kappac/ve-back-end-utils/pkg/logger"
 )
 
 type fetcherCertsMap map[string]string

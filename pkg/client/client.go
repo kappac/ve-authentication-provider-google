@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	"github.com/kappac/ve-authentication-provider-google/internal/grpcclient"
 	"github.com/kappac/ve-authentication-provider-google/internal/pb"
 	"github.com/kappac/ve-authentication-provider-google/pkg/proto/providerinfo"
 	"github.com/kappac/ve-authentication-provider-google/pkg/proto/request"
 	"github.com/kappac/ve-authentication-provider-google/pkg/proto/response"
+	"github.com/kappac/ve-back-end-utils/pkg/grpcclient"
 	"google.golang.org/grpc"
 )
 

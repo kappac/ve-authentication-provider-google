@@ -3,7 +3,7 @@ package google
 import (
 	"encoding/pem"
 
-	"github.com/kappac/ve-authentication-provider-google/internal/logger"
+	"github.com/kappac/ve-back-end-utils/pkg/logger"
 )
 
 type oauthCertificatesMap map[string]*pem.Block

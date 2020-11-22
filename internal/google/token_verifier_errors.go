@@ -1,7 +1,7 @@
 package google
 
 import (
-	veerror "github.com/kappac/ve-authentication-provider-google/pkg/proto/error"
+	veerror "github.com/kappac/ve-back-end-utils/pkg/proto/error"
 )
 
 const (

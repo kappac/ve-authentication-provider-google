@@ -1,9 +1,9 @@
 package response
 
 import (
-	"github.com/kappac/ve-authentication-provider-google/pkg/proto/error"
 	"github.com/kappac/ve-authentication-provider-google/pkg/proto/providerinfo"
 	"github.com/kappac/ve-authentication-provider-google/pkg/proto/request"
+	"github.com/kappac/ve-back-end-utils/pkg/proto/error"
 )
 
 // OptionUpdater updates veValidateTokenResponse properties.

@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/kappac/ve-authentication-provider-google/internal/veconfig"
+	veconfig "github.com/kappac/ve-back-end-utils/pkg/config"
 )
 
 // ServiceConfig stores parameters passed to the service.

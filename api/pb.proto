@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package pb;
 
+import "ve-authentication-provider-google/api/pb.proto";
+
 service VEAuthProviderGoogleService {
   rpc ValidateToken(VEValidateTokenRequest) returns (VEValidateTokenResponse);
 }
@@ -14,11 +16,6 @@ message VEValidateTokenResponse {
   VEProviderInfo info  = 1;
   VEValidateTokenRequest request = 2;
   VEError error = 3;
-}
-
-message VEError {
-  int32 code = 1;
-  string description = 2;
 }
 
 message VEProviderInfo {

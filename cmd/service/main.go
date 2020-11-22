@@ -2,10 +2,10 @@ package main
 
 import (
 	"github.com/kappac/ve-authentication-provider-google/internal/config"
-	"github.com/kappac/ve-authentication-provider-google/internal/launch"
-	"github.com/kappac/ve-authentication-provider-google/internal/logger"
 	"github.com/kappac/ve-authentication-provider-google/internal/service"
-	"github.com/kappac/ve-authentication-provider-google/internal/statusservice"
+	"github.com/kappac/ve-back-end-utils/pkg/launcher"
+	"github.com/kappac/ve-back-end-utils/pkg/logger"
+	"github.com/kappac/ve-back-end-utils/pkg/statusservice"
 )
 
 func main() {
@@ -23,10 +23,11 @@ func main() {
 		),
 	)
 
-	launchErr := <-launch.Launch(
-		launch.WithRunStopper(svc),
-		launch.WithRunStopper(ssvc),
+	l := launcher.New(
+		launcher.WithService(svc),
+		launcher.WithService(ssvc),
 	)
-
-	log.Infom("Terminating", "err", launchErr)
+	if err := l.Run(); err != nil {
+		log.Infom("Terminating", "err", err)
+	}
 }
