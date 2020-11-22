@@ -83,7 +83,7 @@ func (p *veAuthenticationProviderGoogle) runGrpc(errc chan<- error) {
 	p.grpcserver = grpc.NewServer()
 	p.grpcMX.Unlock()
 
-	pb.RegisterVEAuthProviderGoogleServiceServer(p.grpcserver, p.binding)
+	pb.RegisterVEServiceServer(p.grpcserver, p.binding)
 
 	errc <- p.grpcserver.Serve(ln)
 }

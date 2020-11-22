@@ -4,7 +4,7 @@ package pb;
 
 import "github.com/kappac/ve-back-end-utils/pkg/proto/error/generated.proto";
 
-service VEAuthProviderGoogleService {
+service VEService {
   rpc ValidateToken(VEValidateTokenRequest) returns (VEValidateTokenResponse);
 }
 
